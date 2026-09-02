@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deboat's Favour Enterprise - Management & Retail Hub</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#1a3a2a',
+                            mid: '#2d6a4f',
+                            light: '#52b788',
+                            accent: '#f4a261'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <!-- Navbar -->
+    <header class="sticky top-0 z-50 bg-brand text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-brand-accent p-2.5 rounded-lg text-brand font-bold text-xl shadow">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold tracking-wide block">Deboat's Favour Enterprise</span>
+                        <span class="text-xs text-brand-light tracking-wider uppercase font-semibold">Quality & Reliability</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-8 text-sm font-medium">
+                    <a href="#home" class="hover:text-brand-accent transition">Home</a>
+                    <a href="#features" class="hover:text-brand-accent transition">Features</a>
+                    <a href="#about" class="hover:text-brand-accent transition">About Us</a>
+                    <a href="#contact" class="hover:text-brand-accent transition">Contact</a>
+                </nav>
+
+                <!-- Action Button -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <button onclick="openLoginModal()" class="bg-brand-accent text-brand font-semibold px-5 py-2.5 rounded-lg shadow hover:bg-opacity-90 transition flex items-center space-x-2">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>System Portal</span>
+                    </button>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button id="menu-btn" class="text-white focus:outline-none text-2xl">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-brand-mid px-4 pt-2 pb-4 space-y-2 border-t border-emerald-900">
+            <a href="#home" class="block py-2 hover:text-brand-accent">Home</a>
+            <a href="#features" class="block py-2 hover:text-brand-accent">Features</a>
+            <a href="#about" class="block py-2 hover:text-brand-accent">About Us</a>
+            <a href="#contact" class="block py-2 hover:text-brand-accent">Contact</a>
+            <button onclick="openLoginModal()" class="w-full mt-2 bg-brand-accent text-brand font-semibold py-2 rounded-lg text-center">
+                System Portal
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative bg-brand text-white overflow-hidden py-24 lg:py-32">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#52b788_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6 text-center lg:text-left">
+                    <span class="bg-brand-mid text-brand-light text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-emerald-700">
+                        Welcome to Deboat's Favour Enterprise
+                    </span>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+                        Streamlined Enterprise & <span class="text-brand-accent">Retail Solutions</span>
+                    </h1>
+                    <p class="text-lg text-gray-300 max-w-xl mx-auto lg:mx-0">
+                        Empowering your business operations with advanced inventory tracking, precise point-of-sale processing, customer loyalty rewards, and detailed analytics.
+                    </p>
+                    <div class="flex flex-col sm:flex-row justify-center lg:justify-start space-y-3 sm:space-y-0 sm:space-x-4">
+                        <a href="#features" class="bg-brand-accent text-brand font-bold px-8 py-3.5 rounded-xl shadow-lg hover:bg-opacity-90 transition text-center">
+                            Explore Services
+                        </a>
+                        <button onclick="openLoginModal()" class="border-2 border-brand-light text-white font-bold px-8 py-3.5 rounded-xl hover:bg-brand-mid transition text-center">
+                            Access Portal
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="bg-gradient-to-br from-brand-mid to-brand p-8 rounded-3xl shadow-2xl border border-emerald-800 max-w-md w-full relative">
+                        <div class="absolute -top-4 -right-4 bg-brand-accent text-brand p-4 rounded-2xl shadow-lg font-bold text-xl">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">Operations Overview</h3>
+                        <div class="space-y-4">
+                            <div class="bg-brand bg-opacity-60 p-4 rounded-xl flex items-center justify-between border border-emerald-900">
+                                <span class="text-sm text-gray-300">Inventory Tracking</span>
+                                <span class="text-brand-light font-bold"><i class="fa-solid fa-box-open mr-1"></i> Active</span>
+                            </div>
+                            <div class="bg-brand bg-opacity-60 p-4 rounded-xl flex items-center justify-between border border-emerald-900">
+                                <span class="text-sm text-gray-300">POS & Sales Processing</span>
+                                <span class="text-brand-light font-bold"><i class="fa-solid fa-cash-register mr-1"></i> Ready</span>
+                            </div>
+                            <div class="bg-brand bg-opacity-60 p-4 rounded-xl flex items-center justify-between border border-emerald-900">
+                                <span class="text-sm text-gray-300">Customer Loyalty System</span>
+                                <span class="text-brand-accent font-bold"><i class="fa-solid fa-star mr-1"></i> Integrated</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-extrabold text-brand sm:text-4xl">Core Enterprise Features</h2>
+                <p class="mt-4 text-gray-600 text-lg">Designed for maximum efficiency, accuracy, and enterprise growth.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-xl transition group">
+                    <div class="w-14 h-14 bg-brand text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-accent group-hover:text-brand transition">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Smart Inventory</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Manage product stock levels, categories, automated barcode generation, and low-stock alert triggers effortlessly.</p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-xl transition group">
+                    <div class="w-14 h-14 bg-brand text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-accent group-hover:text-brand transition">
+                        <i class="fa-solid fa-cash-register"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Advanced POS</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Handle retail and wholesale transactions seamlessly, manage suspended sales, process refunds, and issue customized receipts.</p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-xl transition group">
+                    <div class="w-14 h-14 bg-brand text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-accent group-hover:text-brand transition">
+                        <i class="fa-solid fa-users-rectangle"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Customer & Loyalty</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Build lasting client relationships with tiered loyalty rewards, customer purchase histories, and credit tracking capabilities.</p>
+                </div>
+                <!-- Feature 4 -->
+                <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-xl transition group">
+                    <div class="w-14 h-14 bg-brand text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-accent group-hover:text-brand transition">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Supplier & Purchases</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Track vendor relations, process purchase orders, record product supplies, and optimize supply chain logistics smoothly.</p>
+                </div>
+                <!-- Feature 5 -->
+                <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-xl transition group">
+                    <div class="w-14 h-14 bg-brand text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-accent group-hover:text-brand transition">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Expense & Financials</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Monitor business overheads, generate profit and loss statements, and review extensive financial summary reports.</p>
+                </div>
+                <!-- Feature 6 -->
+                <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-xl transition group">
+                    <div class="w-14 h-14 bg-brand text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-accent group-hover:text-brand transition">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Role Security & Logs</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Secure system entry with role-based staff permissions, encrypted operations, and comprehensive security audit logs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-gray-50 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <span class="text-brand-mid font-bold text-sm tracking-widest uppercase">About Our Enterprise</span>
+                    <h2 class="text-3xl font-extrabold text-brand sm:text-4xl mt-2 mb-6">Driven by Excellence & Customer Dedication</h2>
+                    <p class="text-gray-600 leading-relaxed mb-4">
+                        Deboat's Favour Enterprise is dedicated to delivering top-tier commercial and retail services. By leveraging state-of-the-art enterprise management architecture, we ensure precision, speed, and reliability across all transactions and stock operations.
+                    </p>
+                    <p class="text-gray-600 leading-relaxed mb-6">
+                        Our platform is custom-built to support comprehensive business workflows—from day-to-day cashiering and stock replenishment to deep managerial analytics and customer loyalty programs.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <span class="block text-2xl font-extrabold text-brand">100%</span>
+                            <span class="text-xs text-gray-500 uppercase font-semibold">Operational Reliability</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <span class="block text-2xl font-extrabold text-brand-accent">24/7</span>
+                            <span class="text-xs text-gray-500 uppercase font-semibold">Secure System Access</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-brand p-8 lg:p-12 rounded-3xl text-white shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Our Mission & Values</h3>
+                    <p class="text-gray-300 text-sm leading-relaxed mb-6">
+                        To build a seamless commerce environment where quality merchandise meets dependable technology, providing unmatched value to our cherished clients and partners.
+                    </p>
+                    <ul class="space-y-3 text-sm text-gray-200">
+                        <li><i class="fa-solid fa-check text-brand-accent mr-2"></i> Transparent and reliable service delivery</li>
+                        <li><i class="fa-solid fa-check text-brand-accent mr-2"></i> Strict inventory control and accuracy</li>
+                        <li><i class="fa-solid fa-check text-brand-accent mr-2"></i> Customer-first loyalty frameworks</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-extrabold text-brand sm:text-4xl">Get In Touch</h2>
+                <p class="mt-4 text-gray-600 text-lg">Have inquiries or need support? Reach out to our team today.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-gray-50 p-8 rounded-2xl border border-gray-100 text-center">
+                    <div class="w-12 h-12 bg-brand text-brand-accent rounded-full flex items-center justify-center mx-auto mb-4 text-lg">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Our Location</h4>
+                    <p class="text-gray-600 text-sm">Main Commercial Avenue, Ghana</p>
+                </div>
+                <div class="bg-gray-50 p-8 rounded-2xl border border-gray-100 text-center">
+                    <div class="w-12 h-12 bg-brand text-brand-accent rounded-full flex items-center justify-center mx-auto mb-4 text-lg">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Phone Contact</h4>
+                    <p class="text-gray-600 text-sm">+233 24 000 0000</p>
+                </div>
+                <div class="bg-gray-50 p-8 rounded-2xl border border-gray-100 text-center">
+                    <div class="w-12 h-12 bg-brand text-brand-accent rounded-full flex items-center justify-center mx-auto mb-4 text-lg">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Email Support</h4>
+                    <p class="text-gray-600 text-sm">info@deboatsfavour.com</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-brand text-gray-400 py-12 border-t border-emerald-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-accent p-2 rounded text-brand font-bold">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <span class="text-white font-bold text-lg">Deboat's Favour Enterprise</span>
+            </div>
+            <p class="text-sm">© 2026 Deboat's Favour Enterprise. All rights reserved.</p>
+            <div class="flex space-x-4 text-lg">
+                <a href="#" class="hover:text-brand-accent transition"><i class="fa-brands fa-facebook"></i></a>
+                <a href="#" class="hover:text-brand-accent transition"><i class="fa-brands fa-twitter"></i></a>
+                <a href="#" class="hover:text-brand-accent transition"><i class="fa-brands fa-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal Simulation -->
+    <div id="login-modal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl relative">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-brand text-brand-accent rounded-xl flex items-center justify-center mx-auto mb-3 text-xl">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-brand">System Portal Login</h3>
+                <p class="text-sm text-gray-500">Enter your credentials to access management dashboard</p>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Username</label>
+                    <input type="text" id="username" required class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Password</label>
+                    <input type="password" id="password" required class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand">
+                </div>
+                <button type="submit" class="w-full bg-brand text-white font-bold py-3 rounded-lg hover:bg-brand-mid transition shadow">
+                    Authenticate
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Interactions -->
+    <script>
+        // Mobile Menu Toggle
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Modal Controls
+        function openLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+        }
+
+        // Handle Form Submission / Simulation matching Flask backend endpoint structure
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (response.ok && data.ok) {
+                    alert('Login successful! Redirecting to dashboard...');
+                    window.location.href = '/';
+                } else {
+                    alert(data.error || 'Invalid credentials');
+                }
+            } catch (err) {
+                alert('Connected successfully to simulated portal layout. Ensure your Flask backend server is running on /api/login.');
+                closeLoginModal();
+            }
+        }
+    </script>
+</body>
+</html>

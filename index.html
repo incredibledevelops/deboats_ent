@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deboat's Favour Enterprise - Retail & Wholesale Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#1a3a2a',
+                            mid: '#2d6a4f',
+                            light: '#52b788',
+                            accent: '#f4a261'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <header class="sticky top-0 z-50 bg-brand text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-brand-accent p-2.5 rounded-lg text-brand font-bold text-xl shadow">
+                        <i class="fa-solid fa-shop"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold tracking-wide block">Deboat's Favour Enterprise</span>
+                        <span class="text-xs text-brand-light tracking-wider uppercase font-semibold">Retail & Wholesale Center</span>
+                    </div>
+                </div>
+
+                <nav class="hidden md:flex items-center space-x-8 text-sm font-medium">
+                    <a href="#home" class="hover:text-brand-accent transition">Home</a>
+                    <a href="#services" class="hover:text-brand-accent transition">Services</a>
+                    <a href="#catalog" class="hover:text-brand-accent transition">Product Categories</a>
+                    <a href="#about" class="hover:text-brand-accent transition">About Us</a>
+                    <a href="#contact" class="hover:text-brand-accent transition">Contact</a>
+                </nav>
+
+                <div class="md:hidden flex items-center">
+                    <button id="menu-btn" class="text-white focus:outline-none text-2xl">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-brand-mid px-4 pt-2 pb-4 space-y-2 border-t border-emerald-900">
+            <a href="#home" class="block py-2 hover:text-brand-accent">Home</a>
+            <a href="#services" class="block py-2 hover:text-brand-accent">Services</a>
+            <a href="#catalog" class="block py-2 hover:text-brand-accent">Product Categories</a>
+            <a href="#about" class="block py-2 hover:text-brand-accent">About Us</a>
+            <a href="#contact" class="block py-2 hover:text-brand-accent">Contact</a>
+        </div>
+    </header>
+
+    <section id="home" class="relative bg-brand text-white overflow-hidden py-24 lg:py-32">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#52b788_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6 text-center lg:text-left">
+                    <span class="bg-brand-mid text-brand-light text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-emerald-700">
+                        Trusted Retail & Wholesale Partner
+                    </span>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+                        Quality Goods in <span class="text-brand-accent">Retail & Bulk Quantities</span>
+                    </h1>
+                    <p class="text-lg text-gray-300 max-w-xl mx-auto lg:mx-0">
+                        Supplying premium quality merchandise directly to everyday shoppers and bulk buyers alike. Enjoy competitive pricing, flexible purchasing options, and reliable service.
+                    </p>
+                    <div class="flex flex-col sm:flex-row justify-center lg:justify-start space-y-3 sm:space-y-0 sm:space-x-4">
+                        <a href="#catalog" class="bg-brand-accent text-brand font-bold px-8 py-3.5 rounded-xl shadow-lg hover:bg-opacity-90 transition text-center">
+                            Browse Catalog
+                        </a>
+                        <a href="#contact" class="border-2 border-brand-light text-white font-bold px-8 py-3.5 rounded-xl hover:bg-brand-mid transition text-center">
+                            Bulk Inquiries
+                        </a>
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="bg-gradient-to-br from-brand-mid to-brand p-8 rounded-3xl shadow-2xl border border-emerald-800 max-w-md w-full relative">
+                        <div class="absolute -top-4 -right-4 bg-brand-accent text-brand p-4 rounded-2xl shadow-lg font-bold text-xl">
+                            <i class="fa-solid fa-tags"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">Trading Solutions</h3>
+                        <div class="space-y-4">
+                            <div class="bg-brand bg-opacity-60 p-4 rounded-xl flex items-center justify-between border border-emerald-900">
+                                <span class="text-sm text-gray-300">Retail Shopping</span>
+                                <span class="text-brand-light font-bold"><i class="fa-solid fa-basket-shopping mr-1"></i> Single Items</span>
+                            </div>
+                            <div class="bg-brand bg-opacity-60 p-4 rounded-xl flex items-center justify-between border border-emerald-900">
+                                <span class="text-sm text-gray-300">Wholesale Supply</span>
+                                <span class="text-brand-accent font-bold"><i class="fa-solid fa-boxes-stacked mr-1"></i> Bulk Discounts</span>
+                            </div>
+                            <div class="bg-brand bg-opacity-60 p-4 rounded-xl flex items-center justify-between border border-emerald-900">
+                                <span class="text-sm text-gray-300">Stock Availability</span>
+                                <span class="text-brand-light font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Always Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-extrabold text-brand sm:text-4xl">Our Trading Capacities</h2>
+                <p class="mt-4 text-gray-600 text-lg">Tailored services designed to accommodate walk-in retail customers and large-scale wholesale distributors.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-xl transition group">
+                    <div class="w-14 h-14 bg-brand text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-accent group-hover:text-brand transition">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Retail Storefront</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Visit our physical shop for a pleasant shopping experience with a wide selection of everyday consumer goods available in convenient single units.</p>
+                </div>
+                <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-xl transition group">
+                    <div class="w-14 h-14 bg-brand text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-accent group-hover:text-brand transition">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Wholesale Distribution</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Partner with us for bulk orders. We supply traders, local shops, and institutions with heavy stock quantities at unbeatable trade pricing.</p>
+                </div>
+                <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:shadow-xl transition group">
+                    <div class="w-14 h-14 bg-brand text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:bg-brand-accent group-hover:text-brand transition">
+                        <i class="fa-solid fa-handshake"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">B2B & Partner Support</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Enjoy personalized vendor accounts, special credit terms for trusted regular buyers, and priority order fulfillment.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="catalog" class="py-20 bg-gray-50 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-extrabold text-brand sm:text-4xl">General Merchandise Catalog</h2>
+                <p class="mt-4 text-gray-600 text-lg">Explore our diverse inventory categories available for both retail purchase and wholesale supply.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 text-center hover:border-brand-light transition">
+                    <div class="text-brand-mid text-3xl mb-3"><i class="fa-solid fa-basket-shopping"></i></div>
+                    <h4 class="font-bold text-lg mb-1">Consumer Goods</h4>
+                    <p class="text-xs text-gray-500">Everyday household products</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 text-center hover:border-brand-light transition">
+                    <div class="text-brand-mid text-3xl mb-3"><i class="fa-solid fa-box-open"></i></div>
+                    <h4 class="font-bold text-lg mb-1">Bulk Provisions</h4>
+                    <p class="text-xs text-gray-500">Cartons and large quantities</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 text-center hover:border-brand-light transition">
+                    <div class="text-brand-mid text-3xl mb-3"><i class="fa-solid fa-utensils"></i></div>
+                    <h4 class="font-bold text-lg mb-1">Food & Beverages</h4>
+                    <p class="text-xs text-gray-500">Quality consumables & drinks</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 text-center hover:border-brand-light transition">
+                    <div class="text-brand-mid text-3xl mb-3"><i class="fa-solid fa-star"></i></div>
+                    <h4 class="font-bold text-lg mb-1">Specialty Items</h4>
+                    <p class="text-xs text-gray-500">Selected premium imports</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="py-20 bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <span class="text-brand-mid font-bold text-sm tracking-widest uppercase">About Deboat's Favour Enterprise</span>
+                    <h2 class="text-3xl font-extrabold text-brand sm:text-4xl mt-2 mb-6">Your Dependable Source for Value and Variety</h2>
+                    <p class="text-gray-600 leading-relaxed mb-4">
+                        Deboat's Favour Enterprise operates as a premier retail and wholesale hub, bridging the gap between top-grade product manufacturers and everyday consumers or business owners. 
+                    </p>
+                    <p class="text-gray-600 leading-relaxed mb-6">
+                        Whether you are shopping for your household needs on a retail basis or restocking your own storefront via wholesale options, we provide consistent quality, fair pricing, and trustworthy service.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <span class="block text-2xl font-extrabold text-brand">Retail</span>
+                            <span class="text-xs text-gray-500 uppercase font-semibold">Walk-In & Single Units</span>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <span class="block text-2xl font-extrabold text-brand-accent">Wholesale</span>
+                            <span class="text-xs text-gray-500 uppercase font-semibold">Bulk Supply & Discounts</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-brand p-8 lg:p-12 rounded-3xl text-white shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Why Shop With Us?</h3>
+                    <ul class="space-y-4 text-sm text-gray-200">
+                        <li><i class="fa-solid fa-check text-brand-accent mr-2"></i> Flexible buying: buy as little or as much as you need</li>
+                        <li><i class="fa-solid fa-check text-brand-accent mr-2"></i> Competitive wholesale rates for traders and shopkeepers</li>
+                        <li><i class="fa-solid fa-check text-brand-accent mr-2"></i> Verified quality products across all inventory lines</li>
+                        <li><i class="fa-solid fa-check text-brand-accent mr-2"></i> Friendly customer service and quick checkout process</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="py-20 bg-gray-50 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-extrabold text-brand sm:text-4xl">Visit Us or Place an Order</h2>
+                <p class="mt-4 text-gray-600 text-lg">Reach out for retail inquiries, wholesale price lists, or bulk deliveries.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-2xl border border-gray-200 text-center shadow-sm">
+                    <div class="w-12 h-12 bg-brand text-brand-accent rounded-full flex items-center justify-center mx-auto mb-4 text-lg">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Shop Location</h4>
+                    <p class="text-gray-600 text-sm">Main Commercial Avenue, Ghana</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl border border-gray-200 text-center shadow-sm">
+                    <div class="w-12 h-12 bg-brand text-brand-accent rounded-full flex items-center justify-center mx-auto mb-4 text-lg">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Call / WhatsApp</h4>
+                    <p class="text-gray-600 text-sm">+233 24 000 0000</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl border border-gray-200 text-center shadow-sm">
+                    <div class="w-12 h-12 bg-brand text-brand-accent rounded-full flex items-center justify-center mx-auto mb-4 text-lg">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Email Inquiries</h4>
+                    <p class="text-gray-600 text-sm">sales@deboatsfavour.com</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-brand text-gray-400 py-12 border-t border-emerald-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-accent p-2 rounded text-brand font-bold">
+                    <i class="fa-solid fa-shop"></i>
+                </div>
+                <span class="text-white font-bold text-lg">Deboat's Favour Enterprise</span>
+            </div>
+            <p class="text-sm">© 2026 Deboat's Favour Enterprise. Retail & Wholesale Trading.</p>
+            <div class="flex space-x-4 text-lg">
+                <a href="#" class="hover:text-brand-accent transition"><i class="fa-brands fa-facebook"></i></a>
+                <a href="#" class="hover:text-brand-accent transition"><i class="fa-brands fa-twitter"></i></a>
+                <a href="#" class="hover:text-brand-accent transition"><i class="fa-brands fa-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
