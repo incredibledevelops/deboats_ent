@@ -8,10 +8,11 @@ from email.mime.multipart import MIMEMultipart
 import random, string, uuid
 from collections import defaultdict
 from decimal import Decimal
+from sqlalchemy import func, or_, and_
 
 app = Flask(__name__)
-app.secret_key = 'annettes-mart-secret-2024-v2'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///annettes_mart.db'
+app.secret_key = 'deboats-favour-enterprise-secret-2026-v2'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///deboats.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 
@@ -337,8 +338,12 @@ def log_action(action, details=None):
     except:
         pass
 
-def generate_barcode():
-    return ''.join(random.choices(string.digits, k=13))
+def generate_barcode(product_id):
+    """Generate a unique barcode based on product ID"""
+    base = str(product_id).zfill(12)
+    # Simple checksum calculation
+    check = sum(int(c) for c in base) % 10
+    return base + str(check)
 
 def generate_po_number():
     return f"PO-{datetime.now().strftime('%Y%m')}-{random.randint(1000, 9999)}"
@@ -360,17 +365,17 @@ def send_email_alert(subject, body, to_email=None):
         smtp_user = get_setting('smtp_user', '')
         smtp_pass = get_setting('smtp_password', '')
         alert_email = to_email or get_setting('alert_email', '')
-        
+
         if not smtp_user or not smtp_pass or not alert_email:
             return False
-        
+
         msg = MIMEMultipart()
         msg['From'] = smtp_user
         msg['To'] = alert_email
-        msg['Subject'] = f"[Annette's Mart] {subject}"
-        
+        msg['Subject'] = f"[Deboat's Favour] {subject}"
+
         msg.attach(MIMEText(body, 'plain'))
-        
+
         server = smtplib.SMTP(smtp_host, smtp_port)
         server.starttls()
         server.login(smtp_user, smtp_pass)
@@ -385,9 +390,9 @@ def calculate_loyalty_points(customer_id, total_amount):
     customer = Customer.query.get(customer_id)
     if not customer:
         return 0
-    
+
     points = int(total_amount)
-    
+
     tier_multipliers = {
         'Bronze': 1.0,
         'Silver': 1.5,
@@ -475,10 +480,10 @@ def login():
         session['user_role'] = user.role
         user.last_login = datetime.utcnow().isoformat()
         db.session.commit()
-        
+
         perms = json.loads(user.permissions) if user.permissions else None
         log_action('Login', f"User {user.name} logged in")
-        
+
         return jsonify({
             'ok': True, 'name': user.name, 'role': user.role,
             'permissions': perms
@@ -507,6 +512,22 @@ def me():
         'permissions': perms
     })
 
+@app.route('/api/test-email', methods=['POST'])
+@login_required
+def test_email():
+    try:
+        sent = send_email_alert(
+            'Test Email from Deboat\'s Favour',
+            'This is a test email to confirm your SMTP settings are working correctly.\n\nIf you received this, your email configuration is correct!',
+            get_setting('alert_email')
+        )
+        if sent:
+            return jsonify({'message': 'Email sent successfully!'})
+        else:
+            return jsonify({'error': 'Failed to send email. Check SMTP settings.'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # =============================================================================
 # SETTINGS
 # =============================================================================
@@ -530,7 +551,7 @@ def get_settings():
         'theme_brand_light': get_setting('theme_brand_light', '#52b788'),
         'theme_accent': get_setting('theme_accent', '#f4a261'),
         'db_type': get_setting('db_type', 'sqlite'),
-        'system_name': get_setting('system_name', "Annette's Mart"),
+        'system_name': get_setting('system_name', "Deboat's Favour"),
         'system_tagline': get_setting('system_tagline', 'Management System'),
         'smtp_host': get_setting('smtp_host', 'smtp.gmail.com'),
         'smtp_port': get_setting('smtp_port', '587'),
@@ -565,9 +586,50 @@ def save_settings():
     for k in keys:
         if k in data:
             set_setting(k, data[k])
-    
+
     log_action('Settings Updated', f"Settings updated by {session.get('user_name')}")
     return jsonify({'ok': True})
+
+@app.route('/api/settings/db-test', methods=['POST'])
+@login_required
+def test_db_connection():
+    data = request.json or {}
+    db_type = data.get('dbType', 'sqlite')
+
+    if db_type == 'sqlite':
+        return jsonify({'message': 'SQLite connection is active'})
+
+    try:
+        if db_type == 'mysql':
+            import pymysql as driver
+        elif db_type == 'postgresql':
+            import psycopg2 as driver
+        else:
+            return jsonify({'error': f'Unsupported database type: {db_type}'}), 400
+
+        # Use driver module for connection
+        if db_type == 'mysql':
+            conn = driver.connect(
+                host=data.get('dbHost', 'localhost'),
+                port=int(data.get('dbPort', 3306)),
+                user=data.get('dbUser', 'root'),
+                password=data.get('dbPass', ''),
+                database=data.get('dbName', 'deboats_favour')
+            )
+        else:  # postgresql
+            conn = driver.connect(
+                host=data.get('dbHost', 'localhost'),
+                port=int(data.get('dbPort', 5432)),
+                user=data.get('dbUser', 'postgres'),
+                password=data.get('dbPass', ''),
+                database=data.get('dbName', 'deboats_favour')
+            )
+        conn.close()
+        return jsonify({'message': f'{db_type} connection successful!'})
+    except ImportError as e:
+        return jsonify({'error': f'Driver for {db_type} not installed: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # =============================================================================
 # AUDIT LOGS
@@ -579,16 +641,16 @@ def get_audit_logs():
     limit = request.args.get('limit', 100, type=int)
     user_id = request.args.get('user_id', type=int)
     action = request.args.get('action', '')
-    
+
     query = AuditLog.query.order_by(AuditLog.id.desc())
-    
+
     if user_id:
         query = query.filter_by(user_id=user_id)
     if action:
         query = query.filter(AuditLog.action.ilike(f'%{action}%'))
-    
+
     logs = query.limit(limit).all()
-    
+
     return jsonify([{
         'id': l.id,
         'timestamp': l.timestamp,
@@ -668,7 +730,11 @@ def get_inventory():
     query = Product.query.filter_by(is_active=True)
     if q:
         query = query.filter(
-            db.or_(Product.name.ilike(f'%{q}%'), Product.sku.ilike(f'%{q}%'), Product.barcode.ilike(f'%{q}%'))
+            or_(
+                Product.name.ilike(f'%{q}%'),
+                Product.sku.ilike(f'%{q}%'),
+                Product.barcode.ilike(f'%{q}%')
+            )
         )
     if cat:
         query = query.filter_by(category=cat)
@@ -680,10 +746,17 @@ def add_product():
     d = request.json or {}
     if not d.get('name'):
         return jsonify({'error': 'Product name required'}), 400
+
+    # Generate barcode if not provided
+    barcode = d.get('barcode')
+    if not barcode:
+        # We'll assign a temporary ID then generate barcode after commit
+        pass
+
     p = Product(
         name=d['name'],
         sku=d.get('sku', ''),
-        barcode=d.get('barcode') or generate_barcode(),
+        barcode=d.get('barcode'),  # Will be set after commit if needed
         category=d.get('category', 'Other'),
         type=d.get('type', 'Both'),
         buy_price=float(d.get('buyPrice', 0)),
@@ -699,6 +772,12 @@ def add_product():
     )
     db.session.add(p)
     db.session.commit()
+
+    # Generate barcode if not provided
+    if not d.get('barcode'):
+        p.barcode = generate_barcode(p.id)
+        db.session.commit()
+
     log_action('Product Added', f"Added product: {p.name}")
     return jsonify(product_to_dict(p)), 201
 
@@ -753,9 +832,11 @@ def get_product_by_barcode(barcode):
 @app.route('/api/inventory/low-stock', methods=['GET'])
 @login_required
 def get_low_stock_products():
+    threshold = int(get_setting('lowstock', '10'))
     products = Product.query.filter(
-        db.or_(
+        or_(
             Product.stock <= Product.min_stock,
+            Product.stock <= threshold,
             Product.stock == 0
         ),
         Product.is_active == True
@@ -773,28 +854,25 @@ def get_low_stock_products():
 def generate_product_barcode():
     data = request.json or {}
     product_id = data.get('product_id')
-    
+
     if not product_id:
         return jsonify({'error': 'Product ID required'}), 400
-    
+
     product = Product.query.get_or_404(product_id)
-    
-    # Generate a unique barcode
-    base = str(product.id).zfill(12)
-    odd_sum = sum(int(base[i]) for i in range(0, 12, 2))
-    even_sum = sum(int(base[i]) for i in range(1, 12, 2))
-    check_digit = (10 - ((odd_sum * 3 + even_sum) % 10)) % 10
-    barcode = base + str(check_digit)
-    
+
+    # Generate unique barcode
+    barcode = generate_barcode(product.id)
+
     # Ensure uniqueness
     existing = Product.query.filter_by(barcode=barcode).first()
     if existing and existing.id != product.id:
+        # Add random suffix for uniqueness
         suffix = str(random.randint(10, 99))
-        barcode = base[:11] + suffix + str(check_digit)
-    
+        barcode = generate_barcode(product.id)[:12] + suffix + str(random.randint(0, 9))
+
     product.barcode = barcode
     db.session.commit()
-    
+
     log_action('Barcode Generated', f"Generated barcode for {product.name}: {barcode}")
     return jsonify({'ok': True, 'barcode': barcode})
 
@@ -802,29 +880,26 @@ def generate_product_barcode():
 @login_required
 def bulk_generate_barcodes():
     products = Product.query.filter(
-        db.or_(
+        or_(
             Product.barcode.is_(None),
             Product.barcode == ''
         ),
         Product.is_active == True
     ).all()
-    
+
     generated = []
     for product in products:
-        base = str(product.id).zfill(12)
-        odd_sum = sum(int(base[i]) for i in range(0, 12, 2))
-        even_sum = sum(int(base[i]) for i in range(1, 12, 2))
-        check_digit = (10 - ((odd_sum * 3 + even_sum) % 10)) % 10
-        barcode = base + str(check_digit)
-        
+        barcode = generate_barcode(product.id)
+
+        # Ensure uniqueness
         existing = Product.query.filter_by(barcode=barcode).first()
         if existing and existing.id != product.id:
             suffix = str(random.randint(10, 99))
-            barcode = base[:11] + suffix + str(check_digit)
-        
+            barcode = generate_barcode(product.id)[:12] + suffix + str(random.randint(0, 9))
+
         product.barcode = barcode
         generated.append({'id': product.id, 'name': product.name, 'barcode': barcode})
-    
+
     db.session.commit()
     log_action('Bulk Barcode Generation', f"Generated {len(generated)} barcodes")
     return jsonify({'ok': True, 'generated': len(generated)})
@@ -840,7 +915,7 @@ def get_customers():
     query = Customer.query
     if q:
         query = query.filter(
-            db.or_(Customer.name.ilike(f'%{q}%'), Customer.phone.ilike(f'%{q}%'))
+            or_(Customer.name.ilike(f'%{q}%'), Customer.phone.ilike(f'%{q}%'))
         )
     return jsonify([customer_to_dict(c) for c in query.all()])
 
@@ -956,14 +1031,14 @@ def redeem_loyalty_points(cid):
     data = request.json or {}
     points_to_use = data.get('points', 0)
     customer = Customer.query.get_or_404(cid)
-    
+
     if points_to_use > 0:
         if customer.loyalty_points < points_to_use:
             return jsonify({'error': 'Insufficient points'}), 400
-            
+
         discount_value = points_to_use / 100
         customer.loyalty_points -= points_to_use
-        
+
         transaction = LoyaltyTransaction(
             customer_id=cid,
             points_used=points_to_use,
@@ -973,13 +1048,13 @@ def redeem_loyalty_points(cid):
         )
         db.session.add(transaction)
         db.session.commit()
-        
+
         return jsonify({
             'ok': True,
             'remaining_points': customer.loyalty_points,
             'discount_value': discount_value
         })
-    
+
     return jsonify({'error': 'Invalid redemption request'}), 400
 
 @app.route('/api/customers/loyalty-tier-update', methods=['POST'])
@@ -1012,7 +1087,7 @@ def get_sales():
     query = Sale.query.order_by(Sale.id.desc())
     if q:
         query = query.filter(
-            db.or_(
+            or_(
                 Sale.customer.ilike(f'%{q}%'),
                 db.cast(Sale.id, db.String).ilike(f'%{q}%')
             )
@@ -1026,7 +1101,14 @@ def get_sales():
     if status:
         query = query.filter_by(status=status)
 
-    return jsonify([sale_to_dict(s) for s in query.all()])
+    sales = query.all()
+    result = []
+    prefix = get_setting('invoice_prefix', 'INV')
+    for s in sales:
+        data = sale_to_dict(s)
+        data['invoiceNumber'] = f"{prefix}-{s.id:05d}"
+        result.append(data)
+    return jsonify(result)
 
 @app.route('/api/sales', methods=['POST'])
 @login_required
@@ -1056,6 +1138,7 @@ def create_sale():
     change_due = max(0, amount_paid - total)
     sale_status = data.get('status', 'Completed')
 
+    # Update stock
     for item in items:
         p = Product.query.get(item['productId'])
         if p:
@@ -1071,7 +1154,7 @@ def create_sale():
             points_earned = calculate_loyalty_points(customer_id, total)
             cust.loyalty_points = (cust.loyalty_points or 0) + points_earned
             cust.loyalty_tier = get_customer_tier(cust.total_purchases)
-            
+
             if points_earned > 0:
                 lt = LoyaltyTransaction(
                     customer_id=customer_id,
@@ -1110,7 +1193,8 @@ def create_sale():
     log_action('Sale Completed', f"Sale #{sale.id} for {sale.customer}, total {total}")
 
     result = sale_to_dict(sale)
-    result['invoiceNumber'] = f"{get_setting('invoice_prefix', 'INV')}-{sale.id:05d}"
+    prefix = get_setting('invoice_prefix', 'INV')
+    result['invoiceNumber'] = f"{prefix}-{sale.id:05d}"
     return jsonify(result), 201
 
 @app.route('/api/sales/<int:sid>', methods=['GET'])
@@ -1183,21 +1267,21 @@ def suspend_sale():
     items = d.get('items', [])
     if not items:
         return jsonify({'error': 'No items to suspend'}), 400
-    
+
     subtotal = sum(float(i['price']) * int(i['qty']) for i in items)
     discount_type = d.get('discountType', 'percent')
     discount = float(d.get('discount', 0))
     tax_rate = float(d.get('tax', 0))
-    
+
     if discount_type == 'fixed':
         after_discount = max(0, subtotal - discount)
     else:
         after_discount = subtotal * (1 - discount / 100)
-    
+
     tax_amount = after_discount * (tax_rate / 100)
     total = after_discount + tax_amount
     cost = sum(float(i.get('cost', 0)) * int(i['qty']) for i in items)
-    
+
     suspended = SuspendedSale(
         date=date.today().isoformat(),
         customer=d.get('customer', 'Walk-in'),
@@ -1318,7 +1402,7 @@ def report_expense_summary():
         by_cat[e.category]['total'] += e.amount
 
     return jsonify({
-        'rows': [{'id': e.id, 'date': e.date, 'category': e.category, 'description': e.description, 
+        'rows': [{'id': e.id, 'date': e.date, 'category': e.category, 'description': e.description,
                   'amount': e.amount, 'paymentMethod': e.payment_method} for e in expenses],
         'byCategory': list(by_cat.values()),
         'total': sum(e.amount for e in expenses),
@@ -1359,13 +1443,18 @@ def report_loyalty_summary():
     customers = Customer.query.all()
     total_points = sum(c.loyalty_points or 0 for c in customers)
     tier_counts = {'Bronze': 0, 'Silver': 0, 'Gold': 0, 'Platinum': 0}
+    tier_spending = {'Bronze': 0, 'Silver': 0, 'Gold': 0, 'Platinum': 0}
     for c in customers:
-        tier_counts[c.loyalty_tier] = tier_counts.get(c.loyalty_tier, 0) + 1
+        tier = c.loyalty_tier or 'Bronze'
+        tier_counts[tier] = tier_counts.get(tier, 0) + 1
+        tier_spending[tier] = tier_spending.get(tier, 0) + (c.total_purchases or 0)
+
     redemptions = LoyaltyTransaction.query.filter_by(transaction_type='redeem').order_by(LoyaltyTransaction.id.desc()).limit(20).all()
     return jsonify({
         'total_customers': len(customers),
         'total_points': total_points,
         'tier_distribution': tier_counts,
+        'tier_spending': tier_spending,
         'recent_redemptions': [{
             'customer': Customer.query.get(r.customer_id).name if r.customer_id else 'Unknown',
             'points_used': r.points_used,
@@ -1382,7 +1471,7 @@ def report_sales_performance():
     sales = Sale.query.filter(
         Sale.date >= date_from, Sale.date <= date_to, Sale.status != 'Voided'
     ).all()
-    
+
     staff_sales = {}
     for s in sales:
         staff = s.created_by_name or 'Unknown'
@@ -1392,7 +1481,27 @@ def report_sales_performance():
         staff_sales[staff]['count'] += 1
         items = json.loads(s.items_json or '[]')
         staff_sales[staff]['items'] += sum(i['qty'] for i in items)
-    
+
+    # Top selling days
+    day_sales = {}
+    for s in sales:
+        if s.date:
+            day_sales[s.date] = day_sales.get(s.date, 0) + s.total
+    top_days = sorted(day_sales.items(), key=lambda x: x[1], reverse=True)[:7]
+
+    # Hourly pattern (simplified - based on time of day if available)
+    hourly = {}
+    for s in sales:
+        # Use date string as hour approximation if no time field
+        hour = 12  # Default
+        if s.date:
+            try:
+                dt = datetime.strptime(s.date + ' 12:00:00', '%Y-%m-%d %H:%M:%S')
+                hour = 12
+            except:
+                hour = 12
+        hourly[hour] = hourly.get(hour, 0) + s.total
+
     return jsonify({
         'total_sales': len(sales),
         'total_revenue': sum(s.total for s in sales),
@@ -1403,7 +1512,9 @@ def report_sales_performance():
             'transaction_count': data['count'],
             'items_sold': data['items'],
             'avg_transaction': data['total'] / data['count'] if data['count'] > 0 else 0
-        } for staff, data in staff_sales.items()]
+        } for staff, data in staff_sales.items()],
+        'top_selling_days': [{'date': d, 'revenue': amt} for d, amt in top_days],
+        'hourly_pattern': [{'hour': h, 'revenue': amt} for h, amt in sorted(hourly.items())]
     })
 
 @app.route('/api/reports/advanced-analytics', methods=['GET'])
@@ -1414,29 +1525,62 @@ def advanced_analytics():
     for s in sales_data:
         if s.date:
             daily_sales[s.date] = daily_sales.get(s.date, 0) + s.total
-    
+
     sorted_dates = sorted(daily_sales.keys())
-    recent_values = [daily_sales[d] for d in sorted_dates[-7:]]
+    recent_values = [daily_sales[d] for d in sorted_dates[-7:]] if sorted_dates else []
     forecast = sum(recent_values) / len(recent_values) if recent_values else 0
-    
+
     customers = Customer.query.all()
     returning_customers = sum(1 for c in customers if (c.total_visits or 0) > 1)
     retention_rate = (returning_customers / len(customers) * 100) if customers else 0
-    
+
+    # Product associations - find products frequently bought together
+    associations = []
+    sales_list = Sale.query.filter(Sale.status != 'Voided').limit(100).all()
+    product_pairs = {}
+    for s in sales_list:
+        items = json.loads(s.items_json or '[]')
+        product_ids = [i['productId'] for i in items if i.get('productId')]
+        for i in range(len(product_ids)):
+            for j in range(i+1, len(product_ids)):
+                key = tuple(sorted([product_ids[i], product_ids[j]]))
+                product_pairs[key] = product_pairs.get(key, 0) + 1
+
+    # Get product names
+    for pair, freq in sorted(product_pairs.items(), key=lambda x: x[1], reverse=True)[:10]:
+        p1 = Product.query.get(pair[0])
+        p2 = Product.query.get(pair[1])
+        if p1 and p2:
+            associations.append({
+                'products': [p1.name, p2.name],
+                'frequency': freq
+            })
+
+    # Predicted stockouts
     products = Product.query.filter(Product.is_active == True).all()
-    velocity = sum(sum(i['qty'] for i in json.loads(s.items_json or '[]')) for s in sales_data) / 30 if sales_data else 0
     predicted_stockouts = []
     for p in products:
-        if p.stock > 0 and velocity > 0:
-            days_to_empty = int(p.stock / velocity)
-            if days_to_empty < 7:
-                predicted_stockouts.append({
-                    'product_id': p.id,
-                    'product_name': p.name,
-                    'current_stock': p.stock,
-                    'days_until_empty': days_to_empty
-                })
-    
+        if p.stock > 0:
+            # Calculate daily velocity from recent sales
+            sales_with_product = Sale.query.filter(Sale.status != 'Voided').all()
+            total_sold = 0
+            days = 30
+            for s in sales_with_product[-days:]:
+                items = json.loads(s.items_json or '[]')
+                for item in items:
+                    if item.get('productId') == p.id:
+                        total_sold += item.get('qty', 0)
+            velocity = total_sold / days if days > 0 else 0
+            if velocity > 0:
+                days_to_empty = int(p.stock / velocity)
+                if days_to_empty < 7:
+                    predicted_stockouts.append({
+                        'product_id': p.id,
+                        'product_name': p.name,
+                        'current_stock': p.stock,
+                        'days_until_empty': days_to_empty
+                    })
+
     return jsonify({
         'sales_forecast': {
             'daily_forecast': forecast,
@@ -1450,6 +1594,7 @@ def advanced_analytics():
             'retention_rate': retention_rate,
             'new_customers': len(customers) - returning_customers
         },
+        'product_associations': associations,
         'predicted_stockouts': predicted_stockouts
     })
 
@@ -1472,8 +1617,14 @@ def dashboard():
     today_total = sum(s.total for s in today_sales)
     month_total = sum(s.total for s in month_sales)
 
-    low_stock = Product.query.filter(Product.stock <= lowstock_threshold, Product.is_active == True).all()
-    recent = Sale.query.order_by(Sale.id.desc()).limit(6).all()
+    low_stock = Product.query.filter(
+        or_(
+            Product.stock <= lowstock_threshold,
+            Product.stock == 0
+        ),
+        Product.is_active == True
+    ).all()
+    recent = Sale.query.filter(Sale.status != 'Voided').order_by(Sale.id.desc()).limit(6).all()
 
     weekly = []
     for i in range(6, -1, -1):
@@ -1492,6 +1643,14 @@ def dashboard():
 
     total_loyalty_points = sum(c.loyalty_points or 0 for c in Customer.query.all())
 
+    # Prepare recent sales with invoice numbers
+    recent_data = []
+    prefix = get_setting('invoice_prefix', 'INV')
+    for s in recent:
+        data = sale_to_dict(s)
+        data['invoiceNumber'] = f"{prefix}-{s.id:05d}"
+        recent_data.append(data)
+
     return jsonify({
         'todayTotal': today_total,
         'todayCount': len(today_sales),
@@ -1501,12 +1660,126 @@ def dashboard():
         'customerCount': Customer.query.count(),
         'todayExpenses': today_expenses,
         'monthExpenses': month_expenses,
-        'recentSales': [sale_to_dict(s) for s in recent],
+        'recentSales': recent_data,
         'lowStockItems': [{'id': p.id, 'name': p.name, 'stock': p.stock} for p in low_stock],
         'weekly': weekly,
         'wholesaleTotal': wholesale_total,
         'retailTotal': retail_total,
         'totalLoyaltyPoints': total_loyalty_points,
+    })
+
+# =============================================================================
+# ANALYTICS
+# =============================================================================
+
+@app.route('/api/analytics', methods=['GET'])
+@login_required
+def get_analytics():
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+
+    # Sales query
+    sale_query = Sale.query.filter(Sale.status != 'Voided')
+    if date_from:
+        sale_query = sale_query.filter(Sale.date >= date_from)
+    if date_to:
+        sale_query = sale_query.filter(Sale.date <= date_to)
+    sales = sale_query.all()
+
+    total_revenue = sum(s.total for s in sales)
+    total_cost = sum(s.cost for s in sales)
+    gross_profit = total_revenue - total_cost
+
+    # Expenses
+    exp_query = Expense.query
+    if date_from:
+        exp_query = exp_query.filter(Expense.date >= date_from)
+    if date_to:
+        exp_query = exp_query.filter(Expense.date <= date_to)
+    expenses = exp_query.all()
+    total_expenses = sum(e.amount for e in expenses)
+
+    # Monthly data
+    monthly_data = {}
+    for s in sales:
+        if s.date and len(s.date) >= 7:
+            month = s.date[:7]
+            if month not in monthly_data:
+                monthly_data[month] = {'revenue': 0, 'cost': 0, 'expenses': 0}
+            monthly_data[month]['revenue'] += s.total
+            monthly_data[month]['cost'] += s.cost
+
+    # Add expenses to monthly
+    for e in expenses:
+        if e.date and len(e.date) >= 7:
+            month = e.date[:7]
+            if month in monthly_data:
+                monthly_data[month]['expenses'] += e.amount
+            else:
+                monthly_data[month] = {'revenue': 0, 'cost': 0, 'expenses': e.amount}
+
+    monthly = [{'label': m, 'revenue': d['revenue'], 'cost': d['cost'], 'expenses': d['expenses']}
+               for m, d in sorted(monthly_data.items())[-12:]]
+
+    # Category performance
+    category_data = {}
+    for s in sales:
+        items = json.loads(s.items_json or '[]')
+        for item in items:
+            cat = 'Other'
+            prod = Product.query.get(item.get('productId'))
+            if prod and prod.category:
+                cat = prod.category
+            category_data[cat] = category_data.get(cat, 0) + (item.get('price', 0) * item.get('qty', 0))
+
+    categories = [{'name': c, 'value': v} for c, v in sorted(category_data.items(), key=lambda x: x[1], reverse=True)]
+
+    # Payment methods
+    payment_data = {}
+    for s in sales:
+        method = s.payment_method or 'Cash'
+        payment_data[method] = payment_data.get(method, 0) + s.total
+
+    payment_methods = [{'name': m, 'value': v} for m, v in payment_data.items()]
+
+    # Expense categories
+    exp_cat_data = {}
+    for e in expenses:
+        cat = e.category or 'Other'
+        exp_cat_data[cat] = exp_cat_data.get(cat, 0) + e.amount
+
+    expense_categories = [{'name': c, 'value': v} for c, v in sorted(exp_cat_data.items(), key=lambda x: x[1], reverse=True)]
+
+    # Top products
+    product_sales = {}
+    for s in sales:
+        items = json.loads(s.items_json or '[]')
+        for item in items:
+            pid = item.get('productId')
+            if pid:
+                if pid not in product_sales:
+                    product_sales[pid] = {'rev': 0, 'qty': 0}
+                product_sales[pid]['rev'] += item.get('price', 0) * item.get('qty', 0)
+                product_sales[pid]['qty'] += item.get('qty', 0)
+
+    top_products = []
+    for pid, data in sorted(product_sales.items(), key=lambda x: x[1]['rev'], reverse=True)[:10]:
+        prod = Product.query.get(pid)
+        if prod:
+            top_products.append({'name': prod.name, 'rev': data['rev'], 'qty': data['qty']})
+
+    return jsonify({
+        'totalRevenue': total_revenue,
+        'totalCost': total_cost,
+        'grossProfit': gross_profit,
+        'totalExpenses': total_expenses,
+        'netProfit': gross_profit - total_expenses,
+        'margin': (gross_profit / total_revenue * 100) if total_revenue else 0,
+        'monthly': monthly,
+        'categories': categories,
+        'paymentMethods': payment_methods,
+        'expenseCategories': expense_categories,
+        'topProducts': top_products
     })
 
 # =============================================================================
@@ -1519,15 +1792,21 @@ def export_data(dtype):
     if dtype == 'inventory':
         data = [product_to_dict(p) for p in Product.query.filter_by(is_active=True).all()]
     elif dtype == 'sales':
-        data = [sale_to_dict(s) for s in Sale.query.all()]
+        sales = Sale.query.all()
+        data = []
+        prefix = get_setting('invoice_prefix', 'INV')
+        for s in sales:
+            d = sale_to_dict(s)
+            d['invoiceNumber'] = f"{prefix}-{s.id:05d}"
+            data.append(d)
     elif dtype == 'customers':
         data = [customer_to_dict(c) for c in Customer.query.all()]
     elif dtype == 'suppliers':
-        data = [{'id': s.id, 'name': s.name, 'contact': s.contact, 'phone': s.phone, 
-                 'email': s.email, 'address': s.address, 'products': s.products, 
+        data = [{'id': s.id, 'name': s.name, 'contact': s.contact, 'phone': s.phone,
+                 'email': s.email, 'address': s.address, 'products': s.products,
                  'status': s.status, 'totalSupplied': s.total_supplied} for s in Supplier.query.all()]
     elif dtype == 'expenses':
-        data = [{'id': e.id, 'date': e.date, 'category': e.category, 'description': e.description, 
+        data = [{'id': e.id, 'date': e.date, 'category': e.category, 'description': e.description,
                  'amount': e.amount, 'paymentMethod': e.payment_method} for e in Expense.query.all()]
     elif dtype == 'purchases':
         data = [{'id': p.id, 'date': p.date, 'supplierName': p.supplier_name, 'productName': p.product_name,
@@ -1560,13 +1839,36 @@ def import_full():
         count = 0
         for row in d['inventory']:
             if row.get('name'):
-                db.session.add(Product(
-                    name=row['name'], sku=row.get('sku', ''), category=row.get('category', 'Other'),
-                    type=row.get('type', 'Both'),
-                    buy_price=float(row.get('buyPrice', 0)), sell_price=float(row.get('sellPrice', 0)),
-                    wsell_price=float(row.get('wsellPrice', 0)),
-                    stock=int(float(row.get('stock', 0))), unit=row.get('unit', 'pcs')
-                ))
+                # Check if product exists by SKU or barcode
+                existing = None
+                if row.get('sku'):
+                    existing = Product.query.filter_by(sku=row['sku']).first()
+                if not existing and row.get('barcode'):
+                    existing = Product.query.filter_by(barcode=row['barcode']).first()
+
+                if existing:
+                    # Update existing
+                    existing.name = row['name']
+                    existing.category = row.get('category', 'Other')
+                    existing.type = row.get('type', 'Both')
+                    existing.buy_price = float(row.get('buyPrice', 0))
+                    existing.sell_price = float(row.get('sellPrice', 0))
+                    existing.wsell_price = float(row.get('wsellPrice', 0))
+                    existing.stock = int(float(row.get('stock', 0)))
+                    existing.unit = row.get('unit', 'pcs')
+                else:
+                    db.session.add(Product(
+                        name=row['name'],
+                        sku=row.get('sku', ''),
+                        barcode=row.get('barcode'),
+                        category=row.get('category', 'Other'),
+                        type=row.get('type', 'Both'),
+                        buy_price=float(row.get('buyPrice', 0)),
+                        sell_price=float(row.get('sellPrice', 0)),
+                        wsell_price=float(row.get('wsellPrice', 0)),
+                        stock=int(float(row.get('stock', 0))),
+                        unit=row.get('unit', 'pcs')
+                    ))
                 count += 1
         imported['inventory'] = count
 
@@ -1574,11 +1876,21 @@ def import_full():
         count = 0
         for row in d['customers']:
             if row.get('name'):
-                db.session.add(Customer(
-                    name=row['name'], phone=row.get('phone', ''), email=row.get('email', ''),
-                    type=row.get('type', 'Retail'), address=row.get('address', ''),
-                    created_date=date.today().isoformat()
-                ))
+                existing = Customer.query.filter_by(phone=row.get('phone', '')).first()
+                if existing:
+                    existing.name = row['name']
+                    existing.email = row.get('email', '')
+                    existing.type = row.get('type', 'Retail')
+                    existing.address = row.get('address', '')
+                else:
+                    db.session.add(Customer(
+                        name=row['name'],
+                        phone=row.get('phone', ''),
+                        email=row.get('email', ''),
+                        type=row.get('type', 'Retail'),
+                        address=row.get('address', ''),
+                        created_date=date.today().isoformat()
+                    ))
                 count += 1
         imported['customers'] = count
 
@@ -1586,17 +1898,121 @@ def import_full():
         count = 0
         for row in d['suppliers']:
             if row.get('name'):
-                db.session.add(Supplier(
-                    name=row['name'], contact=row.get('contact', ''), phone=row.get('phone', ''),
-                    email=row.get('email', ''), products=row.get('products', ''),
-                    status=row.get('status', 'Active')
-                ))
+                existing = Supplier.query.filter_by(name=row['name']).first()
+                if existing:
+                    existing.contact = row.get('contact', '')
+                    existing.phone = row.get('phone', '')
+                    existing.email = row.get('email', '')
+                    existing.products = row.get('products', '')
+                else:
+                    db.session.add(Supplier(
+                        name=row['name'],
+                        contact=row.get('contact', ''),
+                        phone=row.get('phone', ''),
+                        email=row.get('email', ''),
+                        products=row.get('products', ''),
+                        status=row.get('status', 'Active')
+                    ))
                 count += 1
         imported['suppliers'] = count
 
     db.session.commit()
     log_action('Full Import', f"Full backup imported: {json.dumps(imported)}")
     return jsonify({'ok': True, 'imported': imported})
+
+@app.route('/api/inventory/bulk', methods=['POST'])
+@login_required
+def bulk_import_inventory():
+    data = request.json or []
+    count = 0
+    for row in data:
+        if row.get('name'):
+            existing = None
+            if row.get('sku'):
+                existing = Product.query.filter_by(sku=row['sku']).first()
+            if not existing and row.get('barcode'):
+                existing = Product.query.filter_by(barcode=row['barcode']).first()
+
+            if existing:
+                existing.name = row['name']
+                existing.category = row.get('category', 'Other')
+                existing.type = row.get('type', 'Both')
+                existing.buy_price = float(row.get('buyPrice', 0))
+                existing.sell_price = float(row.get('sellPrice', 0))
+                existing.wsell_price = float(row.get('wsellPrice', 0))
+                existing.stock = int(float(row.get('stock', 0)))
+                existing.unit = row.get('unit', 'pcs')
+            else:
+                db.session.add(Product(
+                    name=row['name'],
+                    sku=row.get('sku', ''),
+                    barcode=row.get('barcode'),
+                    category=row.get('category', 'Other'),
+                    type=row.get('type', 'Both'),
+                    buy_price=float(row.get('buyPrice', 0)),
+                    sell_price=float(row.get('sellPrice', 0)),
+                    wsell_price=float(row.get('wsellPrice', 0)),
+                    stock=int(float(row.get('stock', 0))),
+                    unit=row.get('unit', 'pcs')
+                ))
+            count += 1
+    db.session.commit()
+    log_action('Bulk Import', f"Imported {count} products")
+    return jsonify({'ok': True, 'imported': count})
+
+@app.route('/api/customers/bulk', methods=['POST'])
+@login_required
+def bulk_import_customers():
+    data = request.json or []
+    count = 0
+    for row in data:
+        if row.get('name'):
+            existing = Customer.query.filter_by(phone=row.get('phone', '')).first()
+            if existing:
+                existing.name = row['name']
+                existing.email = row.get('email', '')
+                existing.type = row.get('type', 'Retail')
+                existing.address = row.get('address', '')
+            else:
+                db.session.add(Customer(
+                    name=row['name'],
+                    phone=row.get('phone', ''),
+                    email=row.get('email', ''),
+                    type=row.get('type', 'Retail'),
+                    address=row.get('address', ''),
+                    created_date=date.today().isoformat()
+                ))
+            count += 1
+    db.session.commit()
+    log_action('Bulk Import', f"Imported {count} customers")
+    return jsonify({'ok': True, 'imported': count})
+
+@app.route('/api/suppliers/bulk', methods=['POST'])
+@login_required
+def bulk_import_suppliers():
+    data = request.json or []
+    count = 0
+    for row in data:
+        if row.get('name'):
+            existing = Supplier.query.filter_by(name=row['name']).first()
+            if existing:
+                existing.contact = row.get('contact', '')
+                existing.phone = row.get('phone', '')
+                existing.email = row.get('email', '')
+                existing.products = row.get('products', '')
+            else:
+                db.session.add(Supplier(
+                    name=row['name'],
+                    contact=row.get('contact', ''),
+                    phone=row.get('phone', ''),
+                    email=row.get('email', ''),
+                    products=row.get('products', ''),
+                    status=row.get('status', 'Active')
+                ))
+            count += 1
+    db.session.commit()
+    log_action('Bulk Import', f"Imported {count} suppliers")
+    return jsonify({'ok': True, 'imported': count})
 
 # =============================================================================
 # EXPENSES
@@ -1779,6 +2195,7 @@ def add_purchase():
     if status == 'Received' and prod:
         prod.stock += qty
         prod.buy_price = cost
+        prod.last_restock_date = date.today().isoformat()
 
     if supp:
         supp.total_supplied = (supp.total_supplied or 0) + total
@@ -1796,6 +2213,60 @@ def delete_purchase(pid):
     db.session.commit()
     log_action('Purchase Deleted', f"Deleted purchase #{p.id}")
     return jsonify({'ok': True})
+
+# =============================================================================
+# PURCHASE ORDERS
+# =============================================================================
+
+@app.route('/api/purchase-orders', methods=['POST'])
+@login_required
+def create_purchase_order():
+    d = request.json or {}
+    supplier_id = d.get('supplier_id')
+    items = d.get('items', [])
+
+    if not supplier_id or not items:
+        return jsonify({'error': 'Supplier and items required'}), 400
+
+    subtotal = sum(item['qty'] * item['cost'] for item in items)
+    total = subtotal
+
+    po = PurchaseOrder(
+        po_number=generate_po_number(),
+        supplier_id=supplier_id,
+        supplier_name=d.get('supplier_name', ''),
+        order_date=date.today().isoformat(),
+        expected_delivery=d.get('expected_delivery'),
+        status='Draft',
+        subtotal=subtotal,
+        total=total,
+        notes=d.get('notes', ''),
+        items_json=json.dumps(items),
+        created_by=session.get('user_id'),
+        created_at=datetime.utcnow().isoformat()
+    )
+    db.session.add(po)
+    db.session.commit()
+
+    # Also add to purchases
+    for item in items:
+        p = Purchase(
+            date=date.today().isoformat(),
+            supplier_id=supplier_id,
+            supplier_name=d.get('supplier_name', ''),
+            product_id=item['product_id'],
+            product_name=item.get('name', ''),
+            qty=item['qty'],
+            unit_cost=item['cost'],
+            total=item['qty'] * item['cost'],
+            status='Pending',
+            po_number=po.po_number
+        )
+        db.session.add(p)
+
+    db.session.commit()
+    log_action('Purchase Order Created', f"PO #{po.po_number} created")
+    return jsonify({'ok': True, 'po_number': po.po_number})
 
 # =============================================================================
 # USERS
@@ -1927,8 +2398,10 @@ def clear_data(dtype):
 @app.route('/api/reset', methods=['DELETE'])
 @login_required
 def reset_all():
-    for model in [Sale, SuspendedSale, Purchase, Product, Customer, Supplier, Expense, Category, Setting, AuditLog, LoyaltyTransaction, LoyaltyReward]:
+    # Clear all data except the main admin user
+    for model in [Sale, SuspendedSale, Purchase, PurchaseOrder, Product, Customer, Supplier, Expense, Category, Setting, AuditLog, LoyaltyTransaction, LoyaltyReward]:
         model.query.delete()
+    # Keep only admin user (id=1)
     User.query.filter(User.id != 1).delete()
     db.session.commit()
     seed_data()
@@ -1942,7 +2415,7 @@ def reset_all():
 def seed_data():
     if User.query.count() == 0:
         db.session.add(User(
-            name="Annette Owusu", username="admin",
+            name="Deboat Admin", username="admin",
             password="admin123", role="Admin", status="Active",
             created_at=datetime.utcnow().isoformat()
         ))
@@ -1991,13 +2464,13 @@ def seed_data():
         db.session.commit()
 
     defaults = {
-        'name': "Annette's Mart",
+        'name': "Deboat's Favour",
         'address': '123 Market Street, Accra, Ghana',
         'phone': '+233 24 000 0000',
-        'email': 'info@annettesmart.com',
+        'email': 'info@deboatfavour.com',
         'currency': '₵',
         'lowstock': '10',
-        'footer': "Thank you for shopping at Annette's Mart!",
+        'footer': "Thank you for shopping at Deboat's Favour!",
         'tax_rate': '0',
         'tax_name': 'Tax',
         'invoice_prefix': 'INV',
@@ -2006,7 +2479,7 @@ def seed_data():
         'theme_brand_light': '#52b788',
         'theme_accent': '#f4a261',
         'db_type': 'sqlite',
-        'system_name': "Annette's Mart",
+        'system_name': "Deboat's Favour",
         'system_tagline': 'Management System',
         'smtp_host': 'smtp.gmail.com',
         'smtp_port': '587',
