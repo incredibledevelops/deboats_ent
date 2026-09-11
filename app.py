@@ -8,13 +8,23 @@ from email.mime.multipart import MIMEMultipart
 import random, string, uuid
 from collections import defaultdict
 from decimal import Decimal
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func, or_, and_, exc as sa_exc
+
+try:
+    import fcntl  # POSIX file locking (Linux/macOS)
+except ImportError:  # pragma: no cover - Windows fallback
+    fcntl = None
 
 app = Flask(__name__)
 app.secret_key = 'deboats-favour-enterprise-secret-2026-v2'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///deboats.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    # Allow concurrent gunicorn workers to wait instead of failing instantly
+    'connect_args': {'timeout': 30, 'check_same_thread': False},
+    'pool_pre_ping': True,
+}
 
 db = SQLAlchemy(app)
 
@@ -284,11 +294,11 @@ class AuditLog(db.Model):
 # =============================================================================
 
 def get_setting(key, default=''):
-    s = Setting.query.get(key)
+    s = db.session.get(Setting, key)
     return s.value if s else default
 
 def set_setting(key, value):
-    s = Setting.query.get(key)
+    s = db.session.get(Setting, key)
     if s:
         s.value = str(value)
     else:
@@ -309,7 +319,7 @@ def permission_required(section):
         def decorated(*args, **kwargs):
             if 'user_id' not in session:
                 return jsonify({'error': 'Unauthorized'}), 401
-            user = User.query.get(session['user_id'])
+            user = db.session.get(User, session['user_id'])
             if not user:
                 return jsonify({'error': 'Unauthorized'}), 401
             if user.role == 'Admin':
@@ -335,13 +345,12 @@ def log_action(action, details=None):
         )
         db.session.add(log)
         db.session.commit()
-    except:
-        pass
+    except Exception:
+        db.session.rollback()
 
 def generate_barcode(product_id):
     """Generate a unique barcode based on product ID"""
     base = str(product_id).zfill(12)
-    # Simple checksum calculation
     check = sum(int(c) for c in base) % 10
     return base + str(check)
 
@@ -355,7 +364,7 @@ def send_sms(phone, message):
     try:
         print(f"[SMS] To: {phone}, Message: {message}")
         return True
-    except:
+    except Exception:
         return False
 
 def send_email_alert(subject, body, to_email=None):
@@ -387,7 +396,7 @@ def send_email_alert(subject, body, to_email=None):
         return False
 
 def calculate_loyalty_points(customer_id, total_amount):
-    customer = Customer.query.get(customer_id)
+    customer = db.session.get(Customer, customer_id)
     if not customer:
         return 0
 
@@ -501,7 +510,7 @@ def logout():
 def me():
     if 'user_id' not in session:
         return jsonify({'ok': False}), 401
-    user = User.query.get(session['user_id'])
+    user = db.session.get(User, session['user_id'])
     if not user:
         return jsonify({'ok': False}), 401
     perms = json.loads(user.permissions) if user.permissions else None
@@ -607,7 +616,6 @@ def test_db_connection():
         else:
             return jsonify({'error': f'Unsupported database type: {db_type}'}), 400
 
-        # Use driver module for connection
         if db_type == 'mysql':
             conn = driver.connect(
                 host=data.get('dbHost', 'localhost'),
@@ -616,7 +624,7 @@ def test_db_connection():
                 password=data.get('dbPass', ''),
                 database=data.get('dbName', 'deboats_favour')
             )
-        else:  # postgresql
+        else:
             conn = driver.connect(
                 host=data.get('dbHost', 'localhost'),
                 port=int(data.get('dbPort', 5432)),
@@ -696,7 +704,7 @@ def add_category():
 @app.route('/api/categories/<int:cid>', methods=['PUT'])
 @login_required
 def update_category(cid):
-    c = Category.query.get_or_404(cid)
+    c = db.session.get(Category, cid) or abort_404()
     d = request.json or {}
     new_name = d.get('name', c.name).strip()
     if new_name != c.name and Category.query.filter_by(name=new_name).first():
@@ -712,11 +720,15 @@ def update_category(cid):
 @app.route('/api/categories/<int:cid>', methods=['DELETE'])
 @login_required
 def delete_category(cid):
-    c = Category.query.get_or_404(cid)
+    c = db.session.get(Category, cid) or abort_404()
     db.session.delete(c)
     db.session.commit()
     log_action('Category Deleted', f"Deleted category: {c.name}")
     return jsonify({'ok': True})
+
+def abort_404():
+    from flask import abort
+    abort(404)
 
 # =============================================================================
 # INVENTORY
@@ -747,16 +759,10 @@ def add_product():
     if not d.get('name'):
         return jsonify({'error': 'Product name required'}), 400
 
-    # Generate barcode if not provided
-    barcode = d.get('barcode')
-    if not barcode:
-        # We'll assign a temporary ID then generate barcode after commit
-        pass
-
     p = Product(
         name=d['name'],
         sku=d.get('sku', ''),
-        barcode=d.get('barcode'),  # Will be set after commit if needed
+        barcode=d.get('barcode'),
         category=d.get('category', 'Other'),
         type=d.get('type', 'Both'),
         buy_price=float(d.get('buyPrice', 0)),
@@ -773,7 +779,6 @@ def add_product():
     db.session.add(p)
     db.session.commit()
 
-    # Generate barcode if not provided
     if not d.get('barcode'):
         p.barcode = generate_barcode(p.id)
         db.session.commit()
@@ -784,13 +789,13 @@ def add_product():
 @app.route('/api/inventory/<int:pid>', methods=['GET'])
 @login_required
 def get_product(pid):
-    p = Product.query.get_or_404(pid)
+    p = db.session.get(Product, pid) or abort_404()
     return jsonify(product_to_dict(p))
 
 @app.route('/api/inventory/<int:pid>', methods=['PUT'])
 @login_required
 def update_product(pid):
-    p = Product.query.get_or_404(pid)
+    p = db.session.get(Product, pid) or abort_404()
     d = request.json or {}
     old_stock = p.stock
     p.name = d.get('name', p.name)
@@ -815,7 +820,7 @@ def update_product(pid):
 @app.route('/api/inventory/<int:pid>', methods=['DELETE'])
 @login_required
 def delete_product(pid):
-    p = Product.query.get_or_404(pid)
+    p = db.session.get(Product, pid) or abort_404()
     p.is_active = False
     db.session.commit()
     log_action('Product Deleted', f"Deleted product: {p.name}")
@@ -846,7 +851,7 @@ def get_low_stock_products():
         'stock': p.stock, 'min_stock': p.min_stock,
         'reorder_quantity': p.reorder_quantity,
         'supplier_id': p.supplier_id,
-        'supplier_name': Supplier.query.get(p.supplier_id).name if p.supplier_id else None
+        'supplier_name': db.session.get(Supplier, p.supplier_id).name if p.supplier_id else None
     } for p in products])
 
 @app.route('/api/inventory/generate-barcode', methods=['POST'])
@@ -858,15 +863,12 @@ def generate_product_barcode():
     if not product_id:
         return jsonify({'error': 'Product ID required'}), 400
 
-    product = Product.query.get_or_404(product_id)
+    product = db.session.get(Product, product_id) or abort_404()
 
-    # Generate unique barcode
     barcode = generate_barcode(product.id)
 
-    # Ensure uniqueness
     existing = Product.query.filter_by(barcode=barcode).first()
     if existing and existing.id != product.id:
-        # Add random suffix for uniqueness
         suffix = str(random.randint(10, 99))
         barcode = generate_barcode(product.id)[:12] + suffix + str(random.randint(0, 9))
 
@@ -891,7 +893,6 @@ def bulk_generate_barcodes():
     for product in products:
         barcode = generate_barcode(product.id)
 
-        # Ensure uniqueness
         existing = Product.query.filter_by(barcode=barcode).first()
         if existing and existing.id != product.id:
             suffix = str(random.randint(10, 99))
@@ -946,7 +947,7 @@ def add_customer():
 @app.route('/api/customers/<int:cid>', methods=['GET'])
 @login_required
 def get_customer(cid):
-    c = Customer.query.get_or_404(cid)
+    c = db.session.get(Customer, cid) or abort_404()
     data = customer_to_dict(c)
     sales = Sale.query.filter_by(customer_id=cid).order_by(Sale.id.desc()).all()
     data['purchases'] = [sale_to_dict(s) for s in sales]
@@ -955,7 +956,7 @@ def get_customer(cid):
 @app.route('/api/customers/<int:cid>', methods=['PUT'])
 @login_required
 def update_customer(cid):
-    c = Customer.query.get_or_404(cid)
+    c = db.session.get(Customer, cid) or abort_404()
     d = request.json or {}
     c.name = d.get('name', c.name)
     c.phone = d.get('phone', c.phone)
@@ -974,7 +975,7 @@ def update_customer(cid):
 @app.route('/api/customers/<int:cid>', methods=['DELETE'])
 @login_required
 def delete_customer(cid):
-    c = Customer.query.get_or_404(cid)
+    c = db.session.get(Customer, cid) or abort_404()
     db.session.delete(c)
     db.session.commit()
     log_action('Customer Deleted', f"Deleted customer: {c.name}")
@@ -983,7 +984,7 @@ def delete_customer(cid):
 @app.route('/api/customers/<int:cid>/pay-credit', methods=['POST'])
 @login_required
 def pay_credit(cid):
-    c = Customer.query.get_or_404(cid)
+    c = db.session.get(Customer, cid) or abort_404()
     d = request.json or {}
     amount = float(d.get('amount', 0))
     if amount <= 0:
@@ -996,7 +997,7 @@ def pay_credit(cid):
 @app.route('/api/customers/<int:cid>/loyalty', methods=['GET'])
 @login_required
 def get_customer_loyalty(cid):
-    customer = Customer.query.get_or_404(cid)
+    customer = db.session.get(Customer, cid) or abort_404()
     transactions = LoyaltyTransaction.query.filter_by(customer_id=cid).order_by(LoyaltyTransaction.id.desc()).limit(20).all()
     available_rewards = LoyaltyReward.query.filter(
         LoyaltyReward.is_active == True,
@@ -1030,7 +1031,7 @@ def get_customer_loyalty(cid):
 def redeem_loyalty_points(cid):
     data = request.json or {}
     points_to_use = data.get('points', 0)
-    customer = Customer.query.get_or_404(cid)
+    customer = db.session.get(Customer, cid) or abort_404()
 
     if points_to_use > 0:
         if customer.loyalty_points < points_to_use:
@@ -1140,13 +1141,15 @@ def create_sale():
 
     # Update stock
     for item in items:
-        p = Product.query.get(item['productId'])
+        p = db.session.get(Product, item['productId'])
         if p:
             p.stock = max(0, p.stock - int(item['qty']))
 
+    # ---- FIX: initialize cust so it is always defined before use below ----
+    cust = None
     points_earned = 0
     if customer_id:
-        cust = Customer.query.get(customer_id)
+        cust = db.session.get(Customer, customer_id)
         if cust:
             cust.total_purchases = (cust.total_purchases or 0) + total
             cust.total_visits = (cust.total_visits or 0) + 1
@@ -1168,7 +1171,7 @@ def create_sale():
 
     sale = Sale(
         date=date.today().isoformat(),
-        customer=cust.name if customer_id else 'Walk-in',
+        customer=cust.name if cust else 'Walk-in',
         customer_id=customer_id,
         type=data.get('type', 'Retail'),
         subtotal=subtotal,
@@ -1200,7 +1203,7 @@ def create_sale():
 @app.route('/api/sales/<int:sid>', methods=['GET'])
 @login_required
 def get_sale(sid):
-    s = Sale.query.get_or_404(sid)
+    s = db.session.get(Sale, sid) or abort_404()
     result = sale_to_dict(s)
     prefix = get_setting('invoice_prefix', 'INV')
     result['invoiceNumber'] = f"{prefix}-{s.id:05d}"
@@ -1209,11 +1212,11 @@ def get_sale(sid):
 @app.route('/api/sales/<int:sid>/void', methods=['POST'])
 @login_required
 def void_sale(sid):
-    s = Sale.query.get_or_404(sid)
+    s = db.session.get(Sale, sid) or abort_404()
     if s.status == 'Voided':
         return jsonify({'error': 'Already voided'}), 400
     for item in json.loads(s.items_json or '[]'):
-        p = Product.query.get(item.get('productId'))
+        p = db.session.get(Product, item.get('productId'))
         if p:
             p.stock += int(item.get('qty', 0))
     s.status = 'Voided'
@@ -1224,7 +1227,7 @@ def void_sale(sid):
 @app.route('/api/sales/<int:sid>/edit-receipt', methods=['PUT'])
 @login_required
 def edit_receipt(sid):
-    s = Sale.query.get_or_404(sid)
+    s = db.session.get(Sale, sid) or abort_404()
     d = request.json or {}
     if 'customer' in d:
         s.customer = d['customer']
@@ -1311,7 +1314,7 @@ def suspend_sale():
 @app.route('/api/suspended-sales/<int:sid>', methods=['GET'])
 @login_required
 def get_suspended_sale(sid):
-    s = SuspendedSale.query.get_or_404(sid)
+    s = db.session.get(SuspendedSale, sid) or abort_404()
     return jsonify({
         'id': s.id, 'date': s.date, 'customer': s.customer or 'Walk-in',
         'customerId': s.customer_id, 'type': s.type, 'subtotal': s.subtotal,
@@ -1328,7 +1331,7 @@ def get_suspended_sale(sid):
 @app.route('/api/suspended-sales/<int:sid>', methods=['DELETE'])
 @login_required
 def delete_suspended_sale(sid):
-    s = SuspendedSale.query.get_or_404(sid)
+    s = db.session.get(SuspendedSale, sid) or abort_404()
     db.session.delete(s)
     db.session.commit()
     log_action('Suspended Sale Deleted', f"Deleted suspended sale #{s.id}")
@@ -1456,7 +1459,7 @@ def report_loyalty_summary():
         'tier_distribution': tier_counts,
         'tier_spending': tier_spending,
         'recent_redemptions': [{
-            'customer': Customer.query.get(r.customer_id).name if r.customer_id else 'Unknown',
+            'customer': db.session.get(Customer, r.customer_id).name if r.customer_id else 'Unknown',
             'points_used': r.points_used,
             'description': r.description,
             'date': r.date
@@ -1482,23 +1485,20 @@ def report_sales_performance():
         items = json.loads(s.items_json or '[]')
         staff_sales[staff]['items'] += sum(i['qty'] for i in items)
 
-    # Top selling days
     day_sales = {}
     for s in sales:
         if s.date:
             day_sales[s.date] = day_sales.get(s.date, 0) + s.total
     top_days = sorted(day_sales.items(), key=lambda x: x[1], reverse=True)[:7]
 
-    # Hourly pattern (simplified - based on time of day if available)
     hourly = {}
     for s in sales:
-        # Use date string as hour approximation if no time field
-        hour = 12  # Default
+        hour = 12
         if s.date:
             try:
                 dt = datetime.strptime(s.date + ' 12:00:00', '%Y-%m-%d %H:%M:%S')
                 hour = 12
-            except:
+            except Exception:
                 hour = 12
         hourly[hour] = hourly.get(hour, 0) + s.total
 
@@ -1534,7 +1534,6 @@ def advanced_analytics():
     returning_customers = sum(1 for c in customers if (c.total_visits or 0) > 1)
     retention_rate = (returning_customers / len(customers) * 100) if customers else 0
 
-    # Product associations - find products frequently bought together
     associations = []
     sales_list = Sale.query.filter(Sale.status != 'Voided').limit(100).all()
     product_pairs = {}
@@ -1546,22 +1545,19 @@ def advanced_analytics():
                 key = tuple(sorted([product_ids[i], product_ids[j]]))
                 product_pairs[key] = product_pairs.get(key, 0) + 1
 
-    # Get product names
     for pair, freq in sorted(product_pairs.items(), key=lambda x: x[1], reverse=True)[:10]:
-        p1 = Product.query.get(pair[0])
-        p2 = Product.query.get(pair[1])
+        p1 = db.session.get(Product, pair[0])
+        p2 = db.session.get(Product, pair[1])
         if p1 and p2:
             associations.append({
                 'products': [p1.name, p2.name],
                 'frequency': freq
             })
 
-    # Predicted stockouts
     products = Product.query.filter(Product.is_active == True).all()
     predicted_stockouts = []
     for p in products:
         if p.stock > 0:
-            # Calculate daily velocity from recent sales
             sales_with_product = Sale.query.filter(Sale.status != 'Voided').all()
             total_sold = 0
             days = 30
@@ -1643,7 +1639,6 @@ def dashboard():
 
     total_loyalty_points = sum(c.loyalty_points or 0 for c in Customer.query.all())
 
-    # Prepare recent sales with invoice numbers
     recent_data = []
     prefix = get_setting('invoice_prefix', 'INV')
     for s in recent:
@@ -1678,7 +1673,6 @@ def get_analytics():
     date_from = request.args.get('date_from', '')
     date_to = request.args.get('date_to', '')
 
-    # Sales query
     sale_query = Sale.query.filter(Sale.status != 'Voided')
     if date_from:
         sale_query = sale_query.filter(Sale.date >= date_from)
@@ -1690,7 +1684,6 @@ def get_analytics():
     total_cost = sum(s.cost for s in sales)
     gross_profit = total_revenue - total_cost
 
-    # Expenses
     exp_query = Expense.query
     if date_from:
         exp_query = exp_query.filter(Expense.date >= date_from)
@@ -1699,7 +1692,6 @@ def get_analytics():
     expenses = exp_query.all()
     total_expenses = sum(e.amount for e in expenses)
 
-    # Monthly data
     monthly_data = {}
     for s in sales:
         if s.date and len(s.date) >= 7:
@@ -1709,7 +1701,6 @@ def get_analytics():
             monthly_data[month]['revenue'] += s.total
             monthly_data[month]['cost'] += s.cost
 
-    # Add expenses to monthly
     for e in expenses:
         if e.date and len(e.date) >= 7:
             month = e.date[:7]
@@ -1721,20 +1712,18 @@ def get_analytics():
     monthly = [{'label': m, 'revenue': d['revenue'], 'cost': d['cost'], 'expenses': d['expenses']}
                for m, d in sorted(monthly_data.items())[-12:]]
 
-    # Category performance
     category_data = {}
     for s in sales:
         items = json.loads(s.items_json or '[]')
         for item in items:
             cat = 'Other'
-            prod = Product.query.get(item.get('productId'))
+            prod = db.session.get(Product, item.get('productId'))
             if prod and prod.category:
                 cat = prod.category
             category_data[cat] = category_data.get(cat, 0) + (item.get('price', 0) * item.get('qty', 0))
 
     categories = [{'name': c, 'value': v} for c, v in sorted(category_data.items(), key=lambda x: x[1], reverse=True)]
 
-    # Payment methods
     payment_data = {}
     for s in sales:
         method = s.payment_method or 'Cash'
@@ -1742,7 +1731,6 @@ def get_analytics():
 
     payment_methods = [{'name': m, 'value': v} for m, v in payment_data.items()]
 
-    # Expense categories
     exp_cat_data = {}
     for e in expenses:
         cat = e.category or 'Other'
@@ -1750,7 +1738,6 @@ def get_analytics():
 
     expense_categories = [{'name': c, 'value': v} for c, v in sorted(exp_cat_data.items(), key=lambda x: x[1], reverse=True)]
 
-    # Top products
     product_sales = {}
     for s in sales:
         items = json.loads(s.items_json or '[]')
@@ -1764,7 +1751,7 @@ def get_analytics():
 
     top_products = []
     for pid, data in sorted(product_sales.items(), key=lambda x: x[1]['rev'], reverse=True)[:10]:
-        prod = Product.query.get(pid)
+        prod = db.session.get(Product, pid)
         if prod:
             top_products.append({'name': prod.name, 'rev': data['rev'], 'qty': data['qty']})
 
@@ -1839,7 +1826,6 @@ def import_full():
         count = 0
         for row in d['inventory']:
             if row.get('name'):
-                # Check if product exists by SKU or barcode
                 existing = None
                 if row.get('sku'):
                     existing = Product.query.filter_by(sku=row['sku']).first()
@@ -1847,7 +1833,6 @@ def import_full():
                     existing = Product.query.filter_by(barcode=row['barcode']).first()
 
                 if existing:
-                    # Update existing
                     existing.name = row['name']
                     existing.category = row.get('category', 'Other')
                     existing.type = row.get('type', 'Both')
@@ -2059,7 +2044,7 @@ def add_expense():
 @app.route('/api/expenses/<int:eid>', methods=['PUT'])
 @login_required
 def update_expense(eid):
-    e = Expense.query.get_or_404(eid)
+    e = db.session.get(Expense, eid) or abort_404()
     d = request.json or {}
     e.date = d.get('date', e.date)
     e.category = d.get('category', e.category)
@@ -2074,7 +2059,7 @@ def update_expense(eid):
 @app.route('/api/expenses/<int:eid>', methods=['DELETE'])
 @login_required
 def delete_expense(eid):
-    e = Expense.query.get_or_404(eid)
+    e = db.session.get(Expense, eid) or abort_404()
     db.session.delete(e)
     db.session.commit()
     log_action('Expense Deleted', f"Deleted expense: {e.description}")
@@ -2128,7 +2113,7 @@ def add_supplier():
 @app.route('/api/suppliers/<int:sid>', methods=['PUT'])
 @login_required
 def update_supplier(sid):
-    s = Supplier.query.get_or_404(sid)
+    s = db.session.get(Supplier, sid) or abort_404()
     d = request.json or {}
     s.name = d.get('name', s.name)
     s.contact = d.get('contact', s.contact)
@@ -2146,7 +2131,7 @@ def update_supplier(sid):
 @app.route('/api/suppliers/<int:sid>', methods=['DELETE'])
 @login_required
 def delete_supplier(sid):
-    s = Supplier.query.get_or_404(sid)
+    s = db.session.get(Supplier, sid) or abort_404()
     db.session.delete(s)
     db.session.commit()
     log_action('Supplier Deleted', f"Deleted supplier: {s.name}")
@@ -2177,8 +2162,8 @@ def get_purchases():
 @login_required
 def add_purchase():
     d = request.json or {}
-    supp = Supplier.query.get(d.get('supplierId'))
-    prod = Product.query.get(d.get('productId'))
+    supp = db.session.get(Supplier, d.get('supplierId'))
+    prod = db.session.get(Product, d.get('productId'))
     qty = int(d.get('qty', 0))
     cost = float(d.get('unitCost', 0))
     status = d.get('status', 'Received')
@@ -2208,7 +2193,7 @@ def add_purchase():
 @app.route('/api/purchases/<int:pid>', methods=['DELETE'])
 @login_required
 def delete_purchase(pid):
-    p = Purchase.query.get_or_404(pid)
+    p = db.session.get(Purchase, pid) or abort_404()
     db.session.delete(p)
     db.session.commit()
     log_action('Purchase Deleted', f"Deleted purchase #{p.id}")
@@ -2248,7 +2233,6 @@ def create_purchase_order():
     db.session.add(po)
     db.session.commit()
 
-    # Also add to purchases
     for item in items:
         p = Purchase(
             date=date.today().isoformat(),
@@ -2324,7 +2308,7 @@ def add_user():
 @app.route('/api/users/<int:uid>', methods=['PUT'])
 @login_required
 def update_user(uid):
-    u = User.query.get_or_404(uid)
+    u = db.session.get(User, uid) or abort_404()
     d = request.json or {}
 
     if 'name' in d:
@@ -2354,7 +2338,7 @@ def update_user(uid):
 def delete_user(uid):
     if uid == 1:
         return jsonify({'error': 'Cannot delete main admin'}), 403
-    u = User.query.get_or_404(uid)
+    u = db.session.get(User, uid) or abort_404()
     db.session.delete(u)
     db.session.commit()
     log_action('User Deleted', f"Deleted user: {u.username}")
@@ -2398,10 +2382,10 @@ def clear_data(dtype):
 @app.route('/api/reset', methods=['DELETE'])
 @login_required
 def reset_all():
-    # Clear all data except the main admin user
-    for model in [Sale, SuspendedSale, Purchase, PurchaseOrder, Product, Customer, Supplier, Expense, Category, Setting, AuditLog, LoyaltyTransaction, LoyaltyReward]:
+    for model in [Sale, SuspendedSale, Purchase, PurchaseOrder, Product, Customer,
+                  Supplier, Expense, Category, Setting, AuditLog,
+                  LoyaltyTransaction, LoyaltyReward]:
         model.query.delete()
-    # Keep only admin user (id=1)
     User.query.filter(User.id != 1).delete()
     db.session.commit()
     seed_data()
@@ -2413,6 +2397,8 @@ def reset_all():
 # =============================================================================
 
 def seed_data():
+    """Idempotent seeding. Safe to call multiple times / from multiple workers."""
+
     if User.query.count() == 0:
         db.session.add(User(
             name="Deboat Admin", username="admin",
@@ -2496,18 +2482,62 @@ def seed_data():
         'gold_tier': '5000',
         'platinum_tier': '10000',
     }
+
+    # ---- FIX: read existing keys in ONE query to avoid autoflush races ----
+    existing_keys = {row.key for row in db.session.query(Setting.key).all()}
     for k, v in defaults.items():
-        if not Setting.query.get(k):
+        if k not in existing_keys:
             db.session.add(Setting(key=k, value=v))
-    db.session.commit()
+
+    try:
+        db.session.commit()
+    except sa_exc.IntegrityError:
+        # Another worker inserted the same keys between our SELECT and INSERT.
+        db.session.rollback()
 
 # =============================================================================
-# INIT
+# INIT  (runs once per process, guarded by a cross-process file lock)
 # =============================================================================
 
-with app.app_context():
-    db.create_all()
-    seed_data()
+def init_db():
+    """
+    Create tables and seed data exactly once, even when several gunicorn
+    workers start at the same moment. Uses an exclusive POSIX file lock so
+    only the first worker performs the DDL; the others simply wait and
+    then find the schema already in place.
+    """
+    lock_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.db_init.lock')
+    lock_file = open(lock_path, 'w')
+    try:
+        if fcntl is not None:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+
+        with app.app_context():
+            try:
+                db.create_all()      # checkfirst=True by default, but the lock prevents races
+            except (sa_exc.OperationalError, sa_exc.ProgrammingError, sa_exc.IntegrityError):
+                db.session.rollback()
+
+            try:
+                seed_data()
+            except (sa_exc.OperationalError, sa_exc.IntegrityError):
+                db.session.rollback()
+    finally:
+        try:
+            if fcntl is not None:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        finally:
+            lock_file.close()
+
+# Only initialize when running as the main module.
+# Under gunicorn this block is skipped; gunicorn calls init_db() itself
+# via the post_fork / when_ready hook OR you can simply leave the call below
+# (it is idempotent and lock-protected).
+init_db()
+
+# =============================================================================
+# MAIN
+# =============================================================================
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host='0.0.0.0')
