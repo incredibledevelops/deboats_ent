@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title id="page-title">Deboat's Favour Enterprise</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -16,13 +16,14 @@
     --gold:#fbbf24;--silver:#9ca3af;--platinum:#a78bfa;
   }
   *{box-sizing:border-box;}
-  body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);margin:0;overflow-x:hidden;}
+  html,body{max-width:100%;overflow-x:hidden;}
+  body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);margin:0;}
   .dm-serif{font-family:'DM Serif Display',serif;}
   .page{display:none;}
   .page.active{display:flex;flex-direction:column;min-height:100vh;}
   .sidebar{width:240px;min-height:100vh;background:var(--brand);flex-shrink:0;position:fixed;left:0;top:0;bottom:0;overflow-y:auto;transition:transform .3s;z-index:40;}
-  .main-content{margin-left:240px;flex:1;min-height:100vh;}
-  @media(max-width:768px){.sidebar{transform:translateX(-100%);width:280px;}.sidebar.open{transform:translateX(0)}.main-content{margin-left:0}}
+  .main-content{margin-left:240px;flex:1;min-height:100vh;min-width:0;}
+  @media(max-width:768px){.sidebar{transform:translateX(-100%);width:280px;box-shadow:4px 0 24px rgba(0,0,0,.2);}.sidebar.open{transform:translateX(0)}.main-content{margin-left:0}}
   .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;color:rgba(255,255,255,.7);cursor:pointer;border-radius:8px;margin:2px 10px;transition:all .2s;font-size:14px;font-weight:500;}
   .nav-item:hover{background:rgba(255,255,255,.1);color:#fff;}
   .nav-item.active{background:var(--brand-light);color:#fff;}
@@ -52,26 +53,27 @@
   .badge-gold{background:#fef3c7;color:#92400e;border:1px solid var(--gold);}
   .badge-silver{background:#f3f4f6;color:#374151;border:1px solid var(--silver);}
   .badge-platinum{background:#ede9fe;color:#6d28d9;border:1px solid var(--platinum);}
-  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;}
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;padding:16px;}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;min-width:0;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
   .modal-overlay.open{display:flex;}
-  .modal-box{background:#fff;border-radius:14px;padding:28px;width:90%;max-width:520px;max-height:92vh;overflow-y:auto;}
+  .modal-box{background:#fff;border-radius:14px;padding:28px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;margin:auto;}
   .modal-box-wide{max-width:700px;}
   .modal-box-narrow{max-width:420px;}
   .modal-box-xl{max-width:900px;}
-  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  table{width:100%;border-collapse:collapse;font-size:14px;}
-  th{text-align:left;padding:10px 14px;background:#f1f0eb;color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:600px;}
+  th{text-align:left;padding:10px 14px;background:#f1f0eb;color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;white-space:nowrap;}
   td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text);}
   tr:hover td{background:#fafaf7;}
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--brand);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:90%;}
+  .toast{position:fixed;bottom:24px;right:24px;left:auto;background:var(--brand);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:calc(100vw - 32px);word-break:break-word;}
   .toast.show{transform:translateY(0);opacity:1;}
+  @media(max-width:480px){.toast{left:16px;right:16px;bottom:16px;text-align:center;}}
   select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
   .progress-bar{height:6px;background:#e5e2d8;border-radius:4px;overflow:hidden;}
   .progress-fill{height:100%;border-radius:4px;background:var(--brand-light);transition:width .4s;}
-  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-  .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-wrap:wrap;overflow-x:auto;}
-  .tab-btn{padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+  ::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+  .tab-btn{padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0;}
   .tab-btn.active{color:var(--brand-mid);border-bottom-color:var(--brand-mid);}
   .tab-panel{display:none;} .tab-panel.active{display:block;}
   .color-swatch{width:28px;height:28px;border-radius:6px;border:2px solid var(--border);cursor:pointer;}
@@ -82,7 +84,7 @@
   .hidden-section{display:none;}
   .nav-section-hidden{display:none !important;}
   .pos-product-card:hover{border-color:var(--brand-light) !important;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08);}
-  .pos-product-card{transition:all .2s;cursor:pointer;}
+  .pos-product-card{transition:all .2s;cursor:pointer;min-width:0;}
   .loyalty-tier-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;}
   .tier-bronze{background:#fef3c7;color:#92400e;}
   .tier-silver{background:#f3f4f6;color:#374151;border:1px solid #d1d5db;}
@@ -93,53 +95,105 @@
   .fade-in{animation:fadeIn .3s ease-in;}
   @keyframes fadeIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
 
-  /* Responsive POS */
-  .pos-layout{display:grid;grid-template-columns:1fr 380px;gap:16px;}
-  @media(max-width:992px){.pos-layout{grid-template-columns:1fr 340px;}}
-  @media(max-width:768px){.pos-layout{grid-template-columns:1fr;}.pos-cart-sticky{position:relative !important;top:0 !important;max-height:none !important;}}
+  /* ===== RESPONSIVE POS ===== */
+  .pos-layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start;}
+  @media(max-width:1100px){.pos-layout{grid-template-columns:minmax(0,1fr) 340px;}}
+  @media(max-width:900px){.pos-layout{grid-template-columns:minmax(0,1fr);}}
+  @media(max-width:768px){.pos-cart-sticky{position:relative !important;top:0 !important;max-height:none !important;}}
   #pos-product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:calc(100vh - 340px);overflow-y:auto;padding:2px;}
-  @media(max-width:480px){ #pos-product-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));} }
+  @media(max-width:768px){#pos-product-grid{max-height:none;}}
+  @media(max-width:480px){ #pos-product-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;} }
 
-  /* Dashboard responsive */
-  .dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+  /* ===== RESPONSIVE DASHBOARD ===== */
+  .dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
   .dash-charts{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;margin-bottom:20px;}
   .dash-bottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;}
   @media(max-width:768px){.dash-charts{grid-template-columns:minmax(0,1fr);}.dash-bottom{grid-template-columns:minmax(0,1fr);}.dash-stats{grid-template-columns:repeat(2,1fr);}}
-  @media(max-width:480px){.dash-stats{grid-template-columns:1fr;}}
+  @media(max-width:480px){.dash-stats{grid-template-columns:1fr;}.stat-card{padding:14px 16px;}}
 
-  /* Analytics responsive */
-  .analytics-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+  /* ===== RESPONSIVE ANALYTICS ===== */
+  .analytics-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
   .analytics-charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:20px;}
   @media(max-width:768px){.analytics-charts{grid-template-columns:minmax(0,1fr);}}
+  @media(max-width:480px){.analytics-stats{grid-template-columns:repeat(2,1fr);}}
 
-  /* Chart containers: fixed, controlled height so Chart.js can never grow its
-     canvas beyond its grid track (the cause of the dashboard cut-off/horizontal
-     scroll bug) — every canvas below is wrapped in .chart-wrap and uses
-     maintainAspectRatio:false to match. */
-  .chart-wrap{position:relative;width:100%;height:260px;min-width:0;}
-  .chart-wrap canvas{max-width:100%;}
-  @media(max-width:480px){.chart-wrap{height:200px;}}
+  /* Chart containers — fixed heights so Chart.js can't blow out the grid */
+  .chart-wrap{position:relative;width:100%;height:260px;min-width:0;max-width:100%;}
+  .chart-wrap canvas{max-width:100% !important;max-height:100% !important;}
+  @media(max-width:480px){.chart-wrap{height:210px;}}
   canvas{max-width:100%;}
 
-  /* Safety net: any inline-styled CSS grid on any page gets min-width:0 on its
-     children, so a grid item can never be forced wider than its track by its
-     content (long text, canvases, inputs) and blow out the page horizontally. */
+  /* Safety net: any grid child must be allowed to shrink */
   [style*="display:grid"] > *{min-width:0;}
-  /* Two-column form/detail grids used throughout modals across every page
-     stack to a single column on small screens so fields stay usable instead
-     of being squeezed or overflowing. */
-  @media(max-width:480px){
+
+  /* Responsive form grids inside modals: stack on small screens */
+  @media(max-width:520px){
+    .modal-box{padding:20px;}
+    .modal-box-wide,.modal-box-xl{padding:20px;}
     [style*="grid-template-columns:1fr 1fr"],
     [style*="grid-template-columns: 1fr 1fr"],
-    [style*="grid-template-columns:2fr 1fr 1fr auto"]{grid-template-columns:1fr!important;}
+    [style*="grid-template-columns:1fr 1fr 1fr"],
+    [style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+    [style*="grid-template-columns:2fr 1fr 1fr auto"],
+    [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr !important;}
+    .tabs{overflow-x:auto;}
+    .tab-btn{padding:8px 12px;font-size:13px;}
+  }
+
+  /* Section containers padding responsive */
+  @media(max-width:480px){
+    #sections-container{padding:12px !important;}
+  }
+
+  /* Header responsive */
+  @media(max-width:480px){
+    .header-title{font-size:16px !important;}
+  }
+
+  /* Table cells get tighter on mobile */
+  @media(max-width:600px){
+    th{padding:8px 10px;font-size:11px;}
+    td{padding:9px 10px;font-size:13px;}
+    table{font-size:13px;min-width:520px;}
+  }
+
+  /* Filter bars: allow wrapping and full-width on tiny screens */
+  .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+  @media(max-width:480px){
+    .filter-bar > input, .filter-bar > select{flex:1 1 100% !important;max-width:none !important;min-width:0 !important;}
+    .filter-bar > button{flex:1 1 auto;}
+  }
+
+  /* Suspended/receipt quick-lists stay scrollable */
+  #suspended-sales-list,#recent-receipts-list{max-height:200px;overflow-y:auto;}
+
+  /* POS quick action buttons wrap nicely */
+  .pos-quick-actions{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+  .pos-quick-actions > button{flex:1 1 30%;min-width:80px;}
+
+  /* Discount row wrapping */
+  .discount-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px;flex-wrap:wrap;gap:4px;}
+
+  /* Payment row wrapping */
+  .payment-row{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+
+  /* Cart item wrapping on very small screens */
+  @media(max-width:380px){
+    .cart-line{flex-wrap:wrap;}
+  }
+
+  /* Make sure modals don't exceed viewport width */
+  @media(max-width:480px){
+    .modal-overlay{padding:8px;}
+    .modal-box{padding:16px;border-radius:12px;}
   }
 </style>
 </head>
 <body>
 
 <!-- ===== LOGIN PAGE ===== -->
-<div id="page-login" class="page active" style="background:var(--brand);align-items:center;justify-content:center;min-height:100vh;">
-  <div style="width:100%;max-width:420px;padding:16px;">
+<div id="page-login" class="page active" style="background:var(--brand);align-items:center;justify-content:center;min-height:100vh;padding:16px;">
+  <div style="width:100%;max-width:420px;">
     <div class="card" style="border-radius:18px;padding:32px;">
       <div style="text-align:center;margin-bottom:28px;">
         <div style="width:60px;height:60px;background:var(--brand);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
@@ -169,7 +223,7 @@
 
 <!-- ===== MAIN APP ===== -->
 <div id="page-app" class="page" style="flex-direction:row;">
-  
+
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div style="padding:20px 20px 12px;border-bottom:1px solid rgba(255,255,255,.1);">
@@ -177,7 +231,7 @@
         <div style="width:38px;height:38px;background:var(--brand-light);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
         </div>
-        <div>
+        <div style="min-width:0;">
           <div class="dm-serif" id="sidebar-system-name" style="color:#fff;font-size:15px;line-height:1.2;">Deboat's Favour</div>
           <div id="sidebar-system-tagline" style="color:rgba(255,255,255,.5);font-size:11px;">Management System</div>
         </div>
@@ -204,10 +258,10 @@
     </nav>
     <div style="padding:14px 16px;border-top:1px solid rgba(255,255,255,.1);">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:34px;height:34px;background:var(--brand-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--brand);font-size:13px;" id="sidebar-avatar">A</div>
-        <div>
-          <div style="color:#fff;font-size:13px;font-weight:600;" id="sidebar-name">Admin</div>
-          <div style="color:rgba(255,255,255,.5);font-size:11px;" id="sidebar-role">Store Manager</div>
+        <div style="width:34px;height:34px;background:var(--brand-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--brand);font-size:13px;flex-shrink:0;" id="sidebar-avatar">A</div>
+        <div style="min-width:0;">
+          <div style="color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="sidebar-name">Admin</div>
+          <div style="color:rgba(255,255,255,.5);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="sidebar-role">Store Manager</div>
         </div>
       </div>
       <button onclick="doLogout()" style="width:100%;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.8);padding:8px;border-radius:7px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;">Sign Out</button>
@@ -217,14 +271,14 @@
   <!-- MAIN CONTENT -->
   <div class="main-content">
     <!-- Header -->
-    <div style="background:#fff;border-bottom:1px solid var(--border);padding:0 16px 0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;flex-wrap:wrap;gap:8px;">
-      <div style="display:flex;align-items:center;gap:12px;">
+    <div style="background:#fff;border-bottom:1px solid var(--border);padding:0 12px 0 16px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
         <button onclick="toggleSidebar()" style="display:none;background:none;border:none;cursor:pointer;padding:4px;font-size:22px;" id="hamburger">☰</button>
-        <h2 id="section-title" class="dm-serif" style="font-size:20px;margin:0;color:var(--brand);">Dashboard</h2>
+        <h2 id="section-title" class="dm-serif header-title" style="font-size:20px;margin:0;color:var(--brand);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Dashboard</h2>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <span id="current-date" style="font-size:13px;color:var(--muted);"></span>
-        <div style="width:34px;height:34px;background:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#52b788;font-size:13px;" id="header-avatar">A</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span id="current-date" style="font-size:13px;color:var(--muted);white-space:nowrap;"></span>
+        <div style="width:34px;height:34px;background:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#52b788;font-size:13px;flex-shrink:0;" id="header-avatar">A</div>
       </div>
     </div>
 
@@ -256,7 +310,7 @@
 
       <!-- ===== INVENTORY ===== -->
       <section id="sec-inventory" style="display:none;">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div class="filter-bar">
           <input class="input-field" id="inv-search" placeholder="🔍 Search products…" style="max-width:220px;flex:1;min-width:150px;" oninput="renderInventory()"/>
           <select class="input-field" id="inv-cat-filter" style="max-width:160px;" onchange="renderInventory()">
             <option value="">All Categories</option>
@@ -276,7 +330,7 @@
 
       <!-- ===== CATEGORIES ===== -->
       <section id="sec-categories" style="display:none;">
-        <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+        <div class="filter-bar">
           <button class="btn-primary" onclick="openCategoryModal()">+ Add Category</button>
         </div>
         <div class="card" style="padding:0;">
@@ -290,27 +344,27 @@
       <section id="sec-sales" style="display:none;">
         <div class="pos-layout">
           <!-- Product Grid -->
-          <div>
-            <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
-              <input class="input-field" id="pos-search" placeholder="🔍 Search products to add…" style="flex:1;min-width:150px;" oninput="renderPOSProducts()"/>
-              <select class="input-field" id="pos-type" style="max-width:120px;" onchange="renderPOSProducts()">
+          <div style="min-width:0;">
+            <div class="filter-bar" style="margin-bottom:12px;">
+              <input class="input-field" id="pos-search" placeholder="🔍 Search products to add…" style="flex:1;min-width:140px;" oninput="renderPOSProducts()"/>
+              <select class="input-field" id="pos-type" style="max-width:130px;" onchange="renderPOSProducts()">
                 <option value="">All</option><option value="Wholesale">Wholesale</option><option value="Retail">Retail</option>
               </select>
             </div>
             <div id="pos-product-grid"></div>
           </div>
           <!-- Cart -->
-          <div>
+          <div style="min-width:0;">
             <div class="card pos-cart-sticky" style="position:sticky;top:76px;max-height:calc(100vh - 100px);overflow-y:auto;">
               <div style="font-weight:700;font-size:15px;color:var(--brand);margin-bottom:12px;">🧾 Current Order</div>
-              
+
               <div style="margin-bottom:10px;">
                 <label style="font-size:11px;font-weight:600;color:var(--muted);">Customer</label>
                 <select class="input-field" id="pos-customer" style="margin-top:2px;padding:8px 10px;font-size:13px;" onchange="onCustomerSelect(this.value)">
                   <option value="">Walk-in Customer</option>
                 </select>
               </div>
-              
+
               <div id="loyalty-display" style="display:none;background:var(--accent-light);padding:12px;border-radius:10px;margin-bottom:10px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                   <div>
@@ -325,26 +379,26 @@
                   </div>
                 </div>
               </div>
-              
-              <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
-                <button class="btn-outline btn-sm" onclick="suspendCurrentSale()" style="flex:1;font-size:12px;">⏸️ Suspend</button>
-                <button class="btn-outline btn-sm" onclick="toggleSuspendedList()" style="flex:1;font-size:12px;">📋 Suspended</button>
-                <button class="btn-outline btn-sm" onclick="toggleRecentReceipts()" style="flex:1;font-size:12px;">🧾 Receipts</button>
+
+              <div class="pos-quick-actions">
+                <button class="btn-outline btn-sm" onclick="suspendCurrentSale()" style="font-size:12px;">⏸️ Suspend</button>
+                <button class="btn-outline btn-sm" onclick="toggleSuspendedList()" style="font-size:12px;">📋 Suspended</button>
+                <button class="btn-outline btn-sm" onclick="toggleRecentReceipts()" style="font-size:12px;">🧾 Receipts</button>
               </div>
-              <div id="suspended-sales-list" style="display:none;margin-bottom:10px;max-height:160px;overflow-y:auto;"></div>
-              <div id="recent-receipts-list" style="display:none;margin-bottom:10px;max-height:220px;overflow-y:auto;"></div>
-              
+              <div id="suspended-sales-list" style="display:none;margin-bottom:10px;"></div>
+              <div id="recent-receipts-list" style="display:none;margin-bottom:10px;"></div>
+
               <div id="cart-items" style="min-height:60px;max-height:200px;overflow-y:auto;margin-bottom:10px;font-size:14px;"></div>
-              
+
               <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px;">
                 <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="color:var(--muted);">Subtotal</span><span id="cart-subtotal">₵0.00</span></div>
-                <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px;">
+                <div class="discount-row">
                   <span style="color:var(--muted);">Discount</span>
                   <div style="display:flex;gap:4px;align-items:center;">
                     <select id="cart-discount-type" class="input-field" style="width:70px;padding:4px 6px;font-size:12px;" onchange="updateCartTotals()">
                       <option value="percent">%</option><option value="fixed">Fixed</option>
                     </select>
-                    <input type="number" id="cart-discount" class="input-field" value="0" min="0" step="0.01" style="width:65px;text-align:right;padding:4px 8px;font-size:13px;" oninput="updateCartTotals()"/>
+                    <input type="number" id="cart-discount" class="input-field" value="0" min="0" step="0.01" style="width:70px;text-align:right;padding:4px 8px;font-size:13px;" oninput="updateCartTotals()"/>
                   </div>
                 </div>
                 <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;" id="cart-tax-row">
@@ -352,15 +406,15 @@
                   <span id="cart-tax-amt">₵0.00</span>
                 </div>
                 <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;color:var(--brand);margin-bottom:8px;"><span>Total</span><span id="cart-total">₵0.00</span></div>
-                
-                <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-                  <div style="flex:1;min-width:80px;">
+
+                <div class="payment-row">
+                  <div style="flex:1;min-width:100px;">
                     <label style="font-size:10px;font-weight:600;color:var(--muted);">Payment</label>
                     <select id="cart-payment" class="input-field" style="padding:6px 8px;font-size:12px;margin-top:2px;">
                       <option>Cash</option><option>Mobile Money</option><option>Card</option><option>Credit</option><option>Cheque</option>
                     </select>
                   </div>
-                  <div style="flex:1;min-width:80px;" id="amount-paid-wrap">
+                  <div style="flex:1;min-width:100px;" id="amount-paid-wrap">
                     <label style="font-size:10px;font-weight:600;color:var(--muted);">Amount Paid</label>
                     <input type="number" id="cart-amount-paid" class="input-field" placeholder="0.00" style="padding:6px 8px;font-size:12px;margin-top:2px;" oninput="calcChange()"/>
                   </div>
@@ -369,12 +423,12 @@
                   Change: <span id="change-amount">₵0.00</span>
                 </div>
               </div>
-              
+
               <div style="margin-bottom:8px;">
                 <label style="font-size:10px;font-weight:600;color:var(--muted);">Notes</label>
                 <input class="input-field" id="cart-notes" placeholder="Optional note…" style="padding:6px 8px;font-size:12px;margin-top:2px;"/>
               </div>
-              
+
               <div style="display:flex;gap:6px;">
                 <button class="btn-outline btn-sm" onclick="clearCart()" style="flex:1;font-size:12px;">Clear</button>
                 <button class="btn-accent" onclick="processSale()" style="flex:2;font-size:13px;padding:10px;">Complete Sale ✓</button>
@@ -382,11 +436,11 @@
             </div>
           </div>
         </div>
-        
+
         <div class="card" style="margin-top:20px;padding:0;">
           <div style="padding:14px 20px;font-weight:700;color:var(--brand);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
             <span>Sales History</span>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <div class="filter-bar" style="margin-bottom:0;gap:6px;">
               <input type="date" id="sales-date-from" class="input-field" style="max-width:130px;padding:4px 8px;font-size:12px;" onchange="renderSalesHistory()"/>
               <input type="date" id="sales-date-to" class="input-field" style="max-width:130px;padding:4px 8px;font-size:12px;" onchange="renderSalesHistory()"/>
               <select id="sales-status-filter" class="input-field" style="max-width:110px;padding:4px 8px;font-size:12px;" onchange="renderSalesHistory()">
@@ -404,7 +458,7 @@
 
       <!-- ===== CUSTOMERS ===== -->
       <section id="sec-customers" style="display:none;">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div class="filter-bar">
           <input class="input-field" id="cust-search" placeholder="🔍 Search customers…" style="max-width:220px;flex:1;min-width:150px;" oninput="renderCustomers()"/>
           <button class="btn-primary" onclick="openCustomerModal()">+ Add Customer</button>
           <button class="btn-outline btn-sm" onclick="updateLoyaltyTiers()">🔄 Update Tiers</button>
@@ -419,7 +473,7 @@
 
       <!-- ===== SUPPLIERS ===== -->
       <section id="sec-suppliers" style="display:none;">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div class="filter-bar">
           <input class="input-field" id="supp-search" placeholder="🔍 Search suppliers…" style="max-width:220px;flex:1;min-width:150px;" oninput="renderSuppliers()"/>
           <button class="btn-primary" onclick="openSupplierModal()">+ Add Supplier</button>
         </div>
@@ -433,7 +487,7 @@
 
       <!-- ===== PURCHASES ===== -->
       <section id="sec-purchases" style="display:none;">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div class="filter-bar">
           <input type="date" id="pur-date-from" class="input-field" style="max-width:140px;" onchange="renderPurchases()"/>
           <input type="date" id="pur-date-to" class="input-field" style="max-width:140px;" onchange="renderPurchases()"/>
           <button class="btn-primary" onclick="openPurchaseModal()">+ Record Purchase</button>
@@ -449,7 +503,7 @@
 
       <!-- ===== EXPENSES ===== -->
       <section id="sec-expenses" style="display:none;">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div class="filter-bar">
           <input class="input-field" id="exp-search" placeholder="🔍 Search expenses…" style="max-width:180px;" oninput="renderExpenses()"/>
           <select class="input-field" id="exp-cat-filter" style="max-width:140px;" onchange="renderExpenses()">
             <option value="">All Categories</option>
@@ -472,7 +526,7 @@
 
       <!-- ===== ANALYTICS ===== -->
       <section id="sec-analytics" style="display:none;">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div class="filter-bar">
           <input type="date" id="an-date-from" class="input-field" style="max-width:140px;"/>
           <input type="date" id="an-date-to" class="input-field" style="max-width:140px;"/>
           <button class="btn-outline btn-sm" onclick="renderAnalytics()">Apply Filter</button>
@@ -508,9 +562,9 @@
           <button class="tab-btn" data-tab="staff-rpt" onclick="switchReportTab('staff-rpt')">👤 Staff</button>
           <button class="tab-btn" data-tab="advanced-rpt" onclick="switchReportTab('advanced-rpt')">📊 Advanced</button>
         </div>
-        
+
         <div id="tab-report-sales-rpt" class="tab-panel active">
-          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-bar">
             <input type="date" id="srpt-from" class="input-field" style="max-width:140px;"/>
             <input type="date" id="srpt-to" class="input-field" style="max-width:140px;"/>
             <button class="btn-outline btn-sm" onclick="runSalesReport()">Generate</button>
@@ -519,18 +573,18 @@
           <div id="srpt-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;"></div>
           <div class="card" style="padding:0;"><div class="table-wrap" style="max-height:400px;overflow-y:auto;"><table><thead><tr><th>Date</th><th>Transactions</th><th>Revenue</th><th>COGS</th><th>Profit</th></tr></thead><tbody id="srpt-tbody"></tbody></table></div></div>
         </div>
-        
+
         <div id="tab-report-inv-rpt" class="tab-panel">
-          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-bar">
             <button class="btn-outline btn-sm" onclick="runInvReport()">Generate</button>
             <button class="btn-sm btn-primary" onclick="exportReportCSV('inv-rpt')">Export CSV</button>
           </div>
           <div id="inv-rpt-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;"></div>
           <div class="card" style="padding:0;"><div class="table-wrap" style="max-height:400px;overflow-y:auto;"><table><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Buy Price</th><th>Sell Price</th><th>Cost Value</th><th>Sell Value</th><th>Pot. Profit</th></tr></thead><tbody id="inv-rpt-tbody"></tbody></table></div></div>
         </div>
-        
+
         <div id="tab-report-pl-rpt" class="tab-panel">
-          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-bar">
             <input type="date" id="pl-from" class="input-field" style="max-width:140px;"/>
             <input type="date" id="pl-to" class="input-field" style="max-width:140px;"/>
             <button class="btn-outline btn-sm" onclick="runPLReport()">Generate</button>
@@ -538,9 +592,9 @@
           </div>
           <div id="pl-content"></div>
         </div>
-        
+
         <div id="tab-report-exp-rpt" class="tab-panel">
-          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-bar">
             <input type="date" id="erpt-from" class="input-field" style="max-width:140px;"/>
             <input type="date" id="erpt-to" class="input-field" style="max-width:140px;"/>
             <button class="btn-outline btn-sm" onclick="runExpReport()">Generate</button>
@@ -549,17 +603,17 @@
           <div id="erpt-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;"></div>
           <div class="card" style="padding:0;"><div class="table-wrap" style="max-height:400px;overflow-y:auto;"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Payment</th></tr></thead><tbody id="erpt-tbody"></tbody></table></div></div>
         </div>
-        
+
         <div id="tab-report-loyalty-rpt" class="tab-panel">
-          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-bar">
             <button class="btn-outline btn-sm" onclick="runLoyaltyReport()">Generate Report</button>
             <button class="btn-sm btn-primary" onclick="exportReportCSV('loyalty-rpt')">Export CSV</button>
           </div>
           <div id="loyalty-report-content"></div>
         </div>
-        
+
         <div id="tab-report-staff-rpt" class="tab-panel">
-          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-bar">
             <input type="date" id="staff-from" class="input-field" style="max-width:140px;"/>
             <input type="date" id="staff-to" class="input-field" style="max-width:140px;"/>
             <button class="btn-outline btn-sm" onclick="runStaffPerformanceReport()">Generate</button>
@@ -567,9 +621,9 @@
           </div>
           <div id="staff-report-content"></div>
         </div>
-        
+
         <div id="tab-report-advanced-rpt" class="tab-panel">
-          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-bar">
             <button class="btn-outline btn-sm" onclick="runAdvancedReport()">Generate Advanced Analytics</button>
             <button class="btn-sm btn-primary" onclick="exportReportCSV('advanced-rpt')">Export CSV</button>
           </div>
@@ -642,7 +696,7 @@
 
       <!-- ===== USERS ===== -->
       <section id="sec-users" style="display:none;">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <div class="filter-bar">
           <button class="btn-primary" onclick="openUserModal()">+ Add User</button>
         </div>
         <div class="card" style="margin-bottom:16px;">
@@ -705,22 +759,22 @@
             <div style="font-weight:700;color:var(--brand);margin-bottom:14px;">Theme Colors</div>
             <div style="display:grid;gap:12px;">
               <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                <label style="font-size:12px;font-weight:600;color:var(--muted);min-width:140px;">Primary (Dark)</label>
+                <label style="font-size:12px;font-weight:600;color:var(--muted);min-width:110px;">Primary (Dark)</label>
                 <input type="color" id="set-brand" class="color-swatch" style="width:44px;height:32px;"/>
                 <input class="input-field" id="set-brand-text" placeholder="#1a3a2a" style="max-width:110px;"/>
               </div>
               <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                <label style="font-size:12px;font-weight:600;color:var(--muted);min-width:140px;">Primary (Mid)</label>
+                <label style="font-size:12px;font-weight:600;color:var(--muted);min-width:110px;">Primary (Mid)</label>
                 <input type="color" id="set-brand-mid" class="color-swatch" style="width:44px;height:32px;"/>
                 <input class="input-field" id="set-brand-mid-text" placeholder="#2d6a4f" style="max-width:110px;"/>
               </div>
               <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                <label style="font-size:12px;font-weight:600;color:var(--muted);min-width:140px;">Primary (Light)</label>
+                <label style="font-size:12px;font-weight:600;color:var(--muted);min-width:110px;">Primary (Light)</label>
                 <input type="color" id="set-brand-light" class="color-swatch" style="width:44px;height:32px;"/>
                 <input class="input-field" id="set-brand-light-text" placeholder="#52b788" style="max-width:110px;"/>
               </div>
               <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                <label style="font-size:12px;font-weight:600;color:var(--muted);min-width:140px;">Accent</label>
+                <label style="font-size:12px;font-weight:600;color:var(--muted);min-width:110px;">Accent</label>
                 <input type="color" id="set-accent" class="color-swatch" style="width:44px;height:32px;"/>
                 <input class="input-field" id="set-accent-text" placeholder="#f4a261" style="max-width:110px;"/>
               </div>
@@ -769,14 +823,14 @@
           <div class="card">
             <div style="font-weight:700;color:var(--brand);margin-bottom:6px;">📋 Audit Logs</div>
             <p style="font-size:13px;color:var(--muted);margin:0 0 14px;">Track all user actions in the system.</p>
-            <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+            <div class="filter-bar">
               <div>
                 <label style="font-size:11px;font-weight:600;color:var(--muted);display:block;margin-bottom:3px;">Filter</label>
                 <input class="input-field" id="audit-search" placeholder="Search actions..." style="max-width:180px;padding:4px 8px;font-size:12px;" oninput="renderAuditLogs()"/>
               </div>
               <div>
                 <label style="font-size:11px;font-weight:600;color:var(--muted);display:block;margin-bottom:3px;">Limit</label>
-                <select class="input-field" id="audit-limit" style="max-width:80px;padding:4px 8px;font-size:12px;" onchange="renderAuditLogs()">
+                <select class="input-field" id="audit-limit" style="max-width:90px;padding:4px 8px;font-size:12px;" onchange="renderAuditLogs()">
                   <option value="50">50</option>
                   <option value="100" selected>100</option>
                   <option value="200">200</option>
@@ -1350,14 +1404,14 @@ function populateSettingsForm(s) {
   f('set-brand-light-text').value = s.theme_brand_light || '#52b788';
   f('set-accent').value = s.theme_accent || '#f4a261';
   f('set-accent-text').value = s.theme_accent || '#f4a261';
-  
+
   ['brand','brand-mid','brand-light','accent'].forEach(k => {
     const picker = document.getElementById(`set-${k}`);
     const text = document.getElementById(`set-${k}-text`);
     if(picker) picker.oninput = () => text.value = picker.value;
     if(text) text.oninput = () => { if(/^#[0-9a-f]{6}$/i.test(text.value)) picker.value = text.value; };
   });
-  
+
   if (document.getElementById('set-smtp-host')) {
     f('set-smtp-host').value = s.smtp_host || 'smtp.gmail.com';
     f('set-smtp-port').value = s.smtp_port || '587';
@@ -1366,7 +1420,7 @@ function populateSettingsForm(s) {
     f('set-alert-email').value = s.alert_email || '';
     f('set-enable-email-alerts').value = s.enable_email_alerts ? 'true' : 'false';
   }
-  
+
   if (document.getElementById('set-loyalty-enabled')) {
     f('set-loyalty-enabled').value = s.loyalty_enabled !== undefined ? s.loyalty_enabled : 'true';
     f('set-points-rate').value = s.points_to_currency_rate || '100';
@@ -1550,15 +1604,18 @@ async function renderDashboard() {
   document.getElementById('stat-loyalty-points').textContent = data.totalLoyaltyPoints || 0;
 
   document.getElementById('recent-sales-list').innerHTML = data.recentSales.length ? data.recentSales.map(s=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
-      <div><div style="font-weight:600;font-size:13px;">${s.invoiceNumber||('#'+s.id)}</div><div style="font-size:11px;color:var(--muted);">${s.customer||'Walk-in'} · ${s.date}</div></div>
-      <div style="text-align:right;"><div style="font-weight:700;color:var(--brand);">${cur}${s.total.toFixed(2)}</div><span class="badge ${s.status==='Voided'?'badge-red':'badge-green'}" style="font-size:10px;">${s.status}</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);gap:6px;">
+      <div style="min-width:0;">
+        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.invoiceNumber||('#'+s.id)}</div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.customer||'Walk-in'} · ${s.date}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;"><div style="font-weight:700;color:var(--brand);">${cur}${s.total.toFixed(2)}</div><span class="badge ${s.status==='Voided'?'badge-red':'badge-green'}" style="font-size:10px;">${s.status}</span></div>
     </div>`).join('') : '<p style="color:var(--muted);font-size:13px;">No transactions yet.</p>';
 
   document.getElementById('low-stock-list').innerHTML = data.lowStockItems.length ? data.lowStockItems.map(p=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
-      <div style="font-size:13px;font-weight:600;">${p.name}</div>
-      <span class="badge ${p.stock===0?'badge-red':'badge-amber'}">${p.stock} left</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);gap:6px;">
+      <div style="font-size:13px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+      <span class="badge ${p.stock===0?'badge-red':'badge-amber'}" style="flex-shrink:0;">${p.stock} left</span>
     </div>`).join('') : '<p style="color:var(--success);font-size:13px;">✓ All products well-stocked.</p>';
 
   destroyChart('chart-weekly');
@@ -1624,9 +1681,9 @@ async function saveCategory() {
   const name = document.getElementById('cat-name').value.trim();
   if (!name) return showToast('Category name required.');
   const id = document.getElementById('cat-id').value;
-  const d = { 
-    name, 
-    description: document.getElementById('cat-desc').value, 
+  const d = {
+    name,
+    description: document.getElementById('cat-desc').value,
     color: document.getElementById('cat-color').value,
     loyalty_points_multiplier: parseFloat(document.getElementById('cat-multiplier').value) || 1.0
   };
@@ -1739,15 +1796,15 @@ async function saveProduct() {
   if (!name || isNaN(buy) || isNaN(sell) || isNaN(stock)) return showToast('Please fill in required fields.');
   const id = document.getElementById('p-id').value;
   const data = {
-    name, 
+    name,
     sku: document.getElementById('p-sku').value,
     barcode: document.getElementById('p-barcode').value || undefined,
     category: document.getElementById('p-cat').value,
     type: document.getElementById('p-type').value,
-    buyPrice: buy, 
+    buyPrice: buy,
     sellPrice: sell,
     wsellPrice: parseFloat(document.getElementById('p-wsell').value) || sell,
-    stock, 
+    stock,
     unit: document.getElementById('p-unit').value,
     minStock: parseInt(document.getElementById('p-min-stock').value) || 5,
     supplierId: document.getElementById('p-supplier').value || null,
@@ -1842,14 +1899,14 @@ async function renderPOSProducts() {
   const filtered = items.filter(p => p.stock > 0 && (!type || p.type === type || p.type === 'Both'));
   const grid = document.getElementById('pos-product-grid');
   grid.innerHTML = filtered.map(p => `
-    <div class="pos-product-card" style="background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px;transition:all .2s;cursor:pointer;">
+    <div class="pos-product-card" style="background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px;">
       <div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:3px;">${p.category}</div>
-      <div style="font-weight:700;font-size:12px;margin-bottom:4px;line-height:1.2;">${p.name}</div>
+      <div style="font-weight:700;font-size:12px;margin-bottom:4px;line-height:1.2;word-break:break-word;">${p.name}</div>
       <div style="font-size:16px;font-weight:700;color:var(--brand);">${cur}${parseFloat(p.sellPrice).toFixed(2)}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:2px;">Stock: ${p.stock} ${p.unit||''}</div>
       <div style="display:flex;gap:4px;margin-top:6px;align-items:center;flex-wrap:wrap;">
-        <input type="number" id="qty-${p.id}" value="1" min="1" max="${p.stock}" style="width:44px;padding:4px 4px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;"/>
-        <button onclick="addToCartWithQty(${p.id},'${p.name.replace(/'/g,"\\'")}',${p.sellPrice},${p.wsellPrice||p.sellPrice},${p.buyPrice},${p.stock},'${p.unit||''}')" 
+        <input type="number" id="qty-${p.id}" value="1" min="1" max="${p.stock}" style="width:46px;padding:4px 4px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;"/>
+        <button onclick="addToCartWithQty(${p.id},'${p.name.replace(/'/g,"\\'")}',${p.sellPrice},${p.wsellPrice||p.sellPrice},${p.buyPrice},${p.stock},'${p.unit||''}')"
           class="btn-primary btn-sm" style="padding:4px 10px;font-size:11px;flex:1;">Add</button>
       </div>
     </div>`).join('') || '<p style="color:var(--muted);padding:20px;text-align:center;">No products found.</p>';
@@ -1860,12 +1917,12 @@ function addToCartWithQty(id, name, retailPrice, wsPrice, cost, maxQty, unit) {
   let qty = parseInt(qtyInput.value) || 1;
   qty = Math.min(qty, maxQty);
   if (qty <= 0) qty = 1;
-  
+
   const custId = document.getElementById('pos-customer').value;
   const cust = custId ? allCustomers.find(c=>c.id==custId) : null;
   const useWs = cust && (cust.type === 'Wholesale' || cust.type === 'Both');
   const price = useWs ? wsPrice : retailPrice;
-  
+
   const existing = cart.find(c => c.productId === id);
   if (existing) {
     const newQty = existing.qty + qty;
@@ -1889,24 +1946,24 @@ async function onCustomerSelect(customerId) {
     renderCart();
     return;
   }
-  
+
   try {
     const data = await api('GET', '/api/customers/' + customerId + '/loyalty');
     document.getElementById('loyalty-display').style.display = 'block';
     document.getElementById('loyalty-points').textContent = data.points || 0;
     document.getElementById('loyalty-tier').textContent = data.tier || 'Bronze';
-    
+
     const tierClass = (data.tier||'Bronze').toLowerCase();
     const tierEl = document.getElementById('loyalty-tier');
     tierEl.className = 'loyalty-tier-badge tier-' + tierClass;
-    
+
     const benefits = data.tier_benefits || { discount: 0 };
     document.getElementById('loyalty-discount').textContent = benefits.discount + '%';
-    
+
     const cust = allCustomers.find(c => c.id == customerId);
     const useWs = cust && (cust.type === 'Wholesale' || cust.type === 'Both');
-    cart.forEach(item => { 
-      item.price = useWs ? item.wsPrice : item.retailPrice; 
+    cart.forEach(item => {
+      item.price = useWs ? item.wsPrice : item.retailPrice;
     });
     renderCart();
   } catch(e) {
@@ -1917,12 +1974,12 @@ async function onCustomerSelect(customerId) {
 async function applyLoyaltyPoints() {
   const custId = document.getElementById('pos-customer').value;
   if (!custId) { showToast('Please select a customer first'); return; }
-  
+
   const points = parseInt(document.getElementById('loyalty-points').textContent);
   if (points < 100) { showToast('Need at least 100 points to redeem'); return; }
-  
+
   if (!confirm(`Redeem ${points} points for discount?`)) return;
-  
+
   try {
     const result = await api('POST', '/api/customers/' + custId + '/redeem', { points: points });
     if (result.ok) {
@@ -1944,17 +2001,17 @@ function renderCart() {
   const ci = document.getElementById('cart-items');
   if (!cart.length) { ci.innerHTML = '<p style="color:var(--muted);text-align:center;padding:16px 0;font-size:13px;">No items added yet.</p>'; updateCartTotals(); return; }
   ci.innerHTML = cart.map((item,i) => `
-    <div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);">
+    <div class="cart-line" style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);">
       <div style="flex:1;font-size:12px;min-width:0;">
         <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
         <div style="color:var(--muted);font-size:11px;">${cur}${item.price.toFixed(2)} each</div>
       </div>
       <div style="display:flex;align-items:center;gap:4px;">
         <button onclick="changeQty(${i},-1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:700;font-size:14px;line-height:1;">-</button>
-        <input type="number" min="1" max="${item.maxQty}" value="${item.qty}" onchange="setQty(${i}, this.value)" style="width:40px;padding:2px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:700;text-align:center;"/>
+        <input type="number" min="1" max="${item.maxQty}" value="${item.qty}" onchange="setQty(${i}, this.value)" style="width:42px;padding:2px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:700;text-align:center;"/>
         <button onclick="changeQty(${i},1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:700;font-size:14px;line-height:1;">+</button>
       </div>
-      <div style="font-weight:700;font-size:13px;min-width:48px;text-align:right;">${cur}${(item.price*item.qty).toFixed(2)}</div>
+      <div style="font-weight:700;font-size:13px;min-width:50px;text-align:right;">${cur}${(item.price*item.qty).toFixed(2)}</div>
       <button onclick="removeFromCart(${i})" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:14px;padding:4px;">✕</button>
     </div>`).join('');
   updateCartTotals();
@@ -2022,7 +2079,7 @@ async function processSale() {
   const taxRate = parseFloat(settings.tax_rate) || 0;
   const hasWholesale = cart.some(c => { const p=allProducts.find(x=>x.id===c.productId); return p?.type==='Wholesale'; });
   const saleStatus = payment === 'Credit' ? 'Credit' : 'Completed';
-  
+
   let useLoyalty = false;
   let pointsToRedeem = 0;
   if (custId) {
@@ -2082,7 +2139,7 @@ function showReceiptData(sale, cur) {
     const price = parseFloat(it.price) || 0;
     const qty = parseInt(it.qty) || 0;
     return `<div style="display:flex;justify-content:space-between;gap:6px;margin-bottom:4px;">
-      <span style="flex:1.6;overflow-wrap:break-word;">${it.name}</span>
+      <span style="flex:1.6;overflow-wrap:break-word;word-break:break-word;">${it.name}</span>
       <span style="flex:.6;text-align:center;color:var(--muted);">${qty}</span>
       <span style="flex:.9;text-align:right;color:var(--muted);">${cur}${price.toFixed(2)}</span>
       <span style="flex:.9;text-align:right;font-weight:600;">${cur}${(price*qty).toFixed(2)}</span>
@@ -2151,7 +2208,7 @@ async function suspendCurrentSale() {
   if (!cart.length) { showToast('Cart is empty!'); return; }
   const custId = document.getElementById('pos-customer').value || null;
   const cust = custId ? allCustomers.find(c=>c.id==custId) : null;
-  
+
   const data = {
     items: cart,
     customer: cust ? cust.name : 'Walk-in',
@@ -2165,7 +2222,7 @@ async function suspendCurrentSale() {
     amountPaid: parseFloat(document.getElementById('cart-amount-paid').value) || 0,
     notes: document.getElementById('cart-notes').value
   };
-  
+
   await api('POST', '/api/suspended-sales', data);
   clearCart();
   showToast('Sale suspended! You can resume it later.');
@@ -2211,7 +2268,7 @@ async function renderRecentReceipts() {
         <div style="font-weight:700;font-size:12px;color:var(--brand);">${s.invoiceNumber||('#'+s.id)}</div>
         <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.customer||'Walk-in'} · ${s.date}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
         <span style="font-weight:700;font-size:12px;">${cur}${s.total.toFixed(2)}</span>
         <button class="btn-outline btn-sm" onclick="showReceiptById(${s.id})" style="font-size:10px;padding:3px 8px;">View</button>
       </div>
@@ -2229,7 +2286,7 @@ async function renderSuspendedSales() {
   list.innerHTML = items.map(s => `
     <div style="border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:6px;background:#fafaf7;">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-        <div>
+        <div style="min-width:0;">
           <div style="font-weight:600;font-size:13px;">${s.customerName || 'Walk-in'}</div>
           <div style="font-size:11px;color:var(--muted);">${s.items.length} items · ${cur}${s.total.toFixed(2)}</div>
           <div style="font-size:10px;color:var(--muted);">${s.createdAt ? new Date(s.createdAt).toLocaleString() : ''}</div>
@@ -2255,18 +2312,18 @@ async function resumeSale(id) {
     maxQty: 999,
     unit: item.unit || ''
   }));
-  
+
   if (s.customerId) {
     document.getElementById('pos-customer').value = s.customerId;
     await onCustomerSelect(s.customerId);
   }
-  
+
   document.getElementById('cart-discount').value = s.discount || 0;
   document.getElementById('cart-discount-type').value = s.discountType || 'percent';
   document.getElementById('cart-payment').value = s.paymentMethod || 'Cash';
   document.getElementById('cart-amount-paid').value = s.amountPaid || 0;
   document.getElementById('cart-notes').value = s.notes || '';
-  
+
   renderCart();
   document.getElementById('suspended-sales-list').style.display = 'none';
   showToast('Sale restored! Continue adding items or complete.');
@@ -2887,9 +2944,9 @@ async function renderAnalytics() {
   const maxRev = data.topProducts[0]?.rev || 1;
   document.getElementById('top-products-list').innerHTML = data.topProducts.map(p => `
     <div style="margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:13px;">
-        <span style="font-weight:600;">${p.name}</span>
-        <span style="color:var(--brand);font-weight:700;">${cur}${p.rev.toFixed(2)} · ${p.qty} sold</span>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:13px;gap:6px;">
+        <span style="font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</span>
+        <span style="color:var(--brand);font-weight:700;flex-shrink:0;">${cur}${p.rev.toFixed(2)} · ${p.qty} sold</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" style="width:${(p.rev/maxRev*100).toFixed(1)}%;"></div></div>
     </div>`).join('') || '<p style="color:var(--muted);font-size:13px;">No sales data yet.</p>';
@@ -2996,14 +3053,14 @@ async function runLoyaltyReport() {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
       <div class="card"><div style="font-weight:700;margin-bottom:8px;font-size:13px;">Tier Distribution</div>
         ${Object.entries(data.tier_distribution).map(([tier, count]) => `
-          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px;gap:6px;">
             <span><span class="loyalty-tier-badge tier-${tier.toLowerCase()}">${tier}</span></span>
             <span>${count} customers</span>
           </div>`).join('')}
       </div>
       <div class="card"><div style="font-weight:700;margin-bottom:8px;font-size:13px;">Tier Spending</div>
         ${Object.entries(data.tier_spending).map(([tier, amount]) => `
-          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px;gap:6px;">
             <span><span class="loyalty-tier-badge tier-${tier.toLowerCase()}">${tier}</span></span>
             <span>${cur}${amount.toFixed(2)}</span>
           </div>`).join('')}
@@ -3011,9 +3068,9 @@ async function runLoyaltyReport() {
     </div>
     <div class="card"><div style="font-weight:700;margin-bottom:8px;font-size:13px;">Recent Redemptions</div>
       ${data.recent_redemptions.length ? data.recent_redemptions.map(r => `
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;gap:6px;">
           <span><strong>${r.customer}</strong> - ${r.description}</span>
-          <span>-${r.points_used} pts</span>
+          <span style="flex-shrink:0;">-${r.points_used} pts</span>
         </div>`).join('') : '<p style="color:var(--muted);font-size:13px;">No redemptions yet.</p>'}
     </div>`;
 }
@@ -3063,17 +3120,17 @@ async function runAdvancedReport() {
     <div class="card" style="margin-bottom:16px;">
       <div style="font-weight:700;margin-bottom:8px;font-size:13px;">🛒 Product Associations</div>
       ${data.product_associations.length ? data.product_associations.slice(0,10).map(a => `
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;gap:6px;">
           <span>${a.products.join(' + ')}</span>
-          <span style="font-weight:600;">${a.frequency}x</span>
+          <span style="font-weight:600;flex-shrink:0;">${a.frequency}x</span>
         </div>`).join('') : '<p style="color:var(--muted);font-size:13px;">No associations found.</p>'}
     </div>
     <div class="card">
       <div style="font-weight:700;margin-bottom:8px;font-size:13px;">⚠️ Predicted Stockouts (Next 7 Days)</div>
       ${data.predicted_stockouts.length ? data.predicted_stockouts.map(p => `
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;gap:6px;">
           <span><strong>${p.product_name}</strong> (${p.current_stock} left)</span>
-          <span style="color:var(--danger);">${p.days_until_empty} days</span>
+          <span style="color:var(--danger);flex-shrink:0;">${p.days_until_empty} days</span>
         </div>`).join('') : '<p style="color:var(--success);font-size:13px;">✓ No predicted stockouts in the next 7 days.</p>'}
     </div>`;
 }
@@ -3322,7 +3379,7 @@ async function renderAuditLogs() {
   const params = new URLSearchParams();
   if (search) params.set('action', search);
   params.set('limit', limit);
-  
+
   try {
     const logs = await api('GET', '/api/audit-logs?'+params);
     const tbody = document.getElementById('audit-tbody');
@@ -3410,7 +3467,8 @@ function showToast(msg) {
 }
 
 function checkMobile() {
-  document.getElementById('hamburger').style.display = window.innerWidth < 768 ? 'block' : 'none';
+  const hb = document.getElementById('hamburger');
+  if (hb) hb.style.display = window.innerWidth < 768 ? 'block' : 'none';
 }
 
 window.addEventListener('resize', checkMobile);
